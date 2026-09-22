@@ -1,1 +1,46 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Search — Reelhouse</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="css/style.css"></head><body><header class="site-header"></header><main class="catalog-page search-page"><p class="eyebrow">Search the archive</p><h1>What are you in the mood for?</h1><form class="search-large" id="search-form"><input id="search-input" type="search" placeholder="Search movies and TV shows" autofocus><button class="button primary">Search</button></form><p class="result-count" id="search-summary">Start typing to browse TMDB.</p><div class="catalog-grid" id="search-results"></div><div class="empty-state" id="no-results" hidden>No results found. Try a different title or keyword.</div></main><footer>REELHOUSE <span>•</span> This product uses the TMDB API but is not endorsed or certified by TMDB.</footer><div class="toast" id="toast"></div><script src="js/api.js"></script><script src="js/app.js"></script><script src="js/search.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Search — Zanora</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+     <link rel="icon" href="./assets/Logos/Favico.png">
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <header class="site-header"></header>
+    <main class="catalog-page search-page">
+      <p class="eyebrow">Search the archive</p>
+      <h1>What are you in the mood for?</h1>
+      <form class="search-large" id="search-form">
+        <input
+          id="search-input"
+          type="search"
+          placeholder="Search movies and TV shows"
+          autofocus
+        /><button class="button primary">Search</button>
+      </form>
+      <p class="result-count" id="search-summary">
+        Start typing to browse TMDB.
+      </p>
+      <div class="catalog-grid" id="search-results"></div>
+      <div class="empty-state" id="no-results" hidden>
+        No results found. Try a different title or keyword.
+      </div>
+    </main>
+    <footer>
+      ZANORA <span>•</span> This product uses the TMDB API but is not
+      endorsed or certified by TMDB.
+    </footer>
+    <div class="toast" id="toast"></div>
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/search.js"></script>
+  </body>
+</html>

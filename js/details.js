@@ -7,6 +7,85 @@ let currentMedia = null;
 let currentSource = 'vidsrc'; // 'vidsrc' | 'vidapi' | 'trailer'
 let currentSeason = 1;
 let currentEpisode = 1;
+let lastKnownProgress = null; // { key, value } — updated on every PLAYER_EVENT
+
+function formatTime(seconds) {
+  const s = Math.floor(parseFloat(seconds));
+  if (s >= 3600) {
+    const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
+    return `${h}h ${m}m`;
+  }
+  const m = Math.floor(s / 60), sec = s % 60;
+  return `${m}:${String(sec).padStart(2, '0')}`;
+}
+
+function saveProgress(key, value) {
+  try {
+    localStorage.setItem(key, value);
+    sessionStorage.setItem(key, value); // sessionStorage as fast backup
+  } catch (e) { /* storage full or blocked */ }
+}
+
+function getProgress(key) {
+  // sessionStorage is faster/more reliable within the same tab
+  return sessionStorage.getItem(key) || localStorage.getItem(key);
+}
+
+function saveTVState(mediaId, season, episode) {
+  if (!mediaId) return;
+  const state = JSON.stringify({ season: Number(season), episode: Number(episode) });
+  saveProgress(`tv_state_${mediaId}`, state);
+}
+
+function getTVState(mediaId) {
+  if (!mediaId) return null;
+  const raw = getProgress(`tv_state_${mediaId}`);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch (e) {
+    return null;
+  }
+}
+
+function clearMediaProgress(mediaId) {
+  if (!mediaId) return;
+  lastKnownProgress = null;
+  try {
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && (k.startsWith(`progress_${mediaId}`) || k === `tv_state_${mediaId}`)) {
+        keysToRemove.push(k);
+      }
+    }
+    keysToRemove.forEach(k => {
+      localStorage.removeItem(k);
+      sessionStorage.removeItem(k);
+    });
+    localStorage.removeItem(`progress_${mediaId}`);
+    localStorage.removeItem(`tv_state_${mediaId}`);
+    sessionStorage.removeItem(`progress_${mediaId}`);
+    sessionStorage.removeItem(`tv_state_${mediaId}`);
+  } catch (e) {}
+}
+
+// Flush last known progress on page hide/unload (covers reloads & tab close)
+function flushProgress() {
+  if (lastKnownProgress) {
+    saveProgress(lastKnownProgress.key, lastKnownProgress.value);
+    // Also keep the generic key updated
+    if (currentMedia) {
+      saveProgress(`progress_${currentMedia.id}`, lastKnownProgress.value);
+      if (type === 'tv') {
+        saveTVState(currentMedia.id, currentSeason, currentEpisode);
+      }
+    }
+  }
+}
+document.addEventListener('visibilitychange', () => { if (document.hidden) flushProgress(); });
+window.addEventListener('beforeunload', flushProgress);
+window.addEventListener('pagehide', flushProgress);
 
 function castList(data) {
   return (data.credits?.cast || []).slice(0, 6).map(p => p.name).join(', ') || 'Not available';
@@ -19,7 +98,7 @@ function recommendations(data) {
 
 function getVidSrcUrl(mediaId, mediaType, season = 1, episode = 1) {
   const progressKey = `progress_${mediaId}${mediaType === 'tv' ? `_s${season}_e${episode}` : ''}`;
-  const saved = localStorage.getItem(progressKey) || localStorage.getItem(`progress_${mediaId}`);
+  const saved = getProgress(progressKey) || getProgress(`progress_${mediaId}`);
   const startParam = saved && parseFloat(saved) > 10 ? `&startAt=${Math.floor(parseFloat(saved))}` : '';
 
   if (mediaType === 'tv') {
@@ -40,18 +119,30 @@ function updatePlayer(source, s = currentSeason, ep = currentEpisode) {
   currentSeason = s;
   currentEpisode = ep;
 
+  if (currentMedia && type === 'tv') {
+    saveTVState(currentMedia.id, s, ep);
+  }
+
   const playerSection = document.querySelector('#player-section');
   const playerIframe = document.querySelector('#media-player');
   const playerTitle = document.querySelector('#player-title');
   const sourceVidsrcBtn = document.querySelector('#source-vidsrc');
   const sourceVidapiBtn = document.querySelector('#source-vidapi');
   const sourceTrailerBtn = document.querySelector('#source-trailer');
+  const sourcePanel = document.querySelector('.source-panel');
+  const seasonsSection = document.querySelector('.seasons-section');
 
   if (!playerIframe || !currentMedia) return;
 
-  // Reveal player section when watch/episode/source is clicked
+  // Reveal player section, source panel and seasons section when watch/episode/source is clicked
   if (playerSection) {
     playerSection.classList.remove('player-hidden');
+  }
+  if (sourcePanel) {
+    sourcePanel.classList.remove('source-panel-hidden');
+  }
+  if (seasonsSection) {
+    seasonsSection.classList.remove('seasons-hidden');
   }
 
   const trailer = (currentMedia.videos?.results || []).find(v => v.site === 'YouTube' && v.type === 'Trailer' && v.official)
@@ -84,20 +175,45 @@ function updatePlayer(source, s = currentSeason, ep = currentEpisode) {
     if (sourceTrailerBtn) sourceTrailerBtn.classList.add('active');
   }
 
-  // Update episode active class
-  document.querySelectorAll('.episode-card').forEach(el => el.classList.remove('active'));
-  const activeEpEl = document.querySelector(`#ep-${s}-${ep}`);
-  if (activeEpEl) activeEpEl.classList.add('active');
+  // Update episode active class & season tabs if TV
+  if (type === 'tv') {
+    document.querySelectorAll('.season-pill').forEach(btn => {
+      btn.classList.toggle('active', btn.textContent.trim() === `Season ${s}`);
+    });
+    const dropdown = document.querySelector('#season-dropdown');
+    if (dropdown && dropdown.value != s) dropdown.value = s;
+
+    const episodesList = document.querySelector('#episodes-list');
+    const activeEpInDom = document.querySelector(`#ep-${s}-${ep}`);
+    if (!activeEpInDom && episodesList) {
+      loadSeason(s);
+    } else {
+      document.querySelectorAll('.episode-card').forEach(el => el.classList.remove('active'));
+      if (activeEpInDom) activeEpInDom.classList.add('active');
+    }
+  } else {
+    document.querySelectorAll('.episode-card').forEach(el => el.classList.remove('active'));
+    const activeEpEl = document.querySelector(`#ep-${s}-${ep}`);
+    if (activeEpEl) activeEpEl.classList.add('active');
+  }
 }
 
 function closePlayer() {
   const playerSection = document.querySelector('#player-section');
   const playerIframe = document.querySelector('#media-player');
+  const sourcePanel = document.querySelector('.source-panel');
+  const seasonsSection = document.querySelector('.seasons-section');
   if (playerIframe) {
     playerIframe.src = 'about:blank';
   }
   if (playerSection) {
     playerSection.classList.add('player-hidden');
+  }
+  if (sourcePanel) {
+    sourcePanel.classList.add('source-panel-hidden');
+  }
+  if (seasonsSection) {
+    seasonsSection.classList.add('seasons-hidden');
   }
 }
 
@@ -125,12 +241,20 @@ window.addEventListener('message', (event) => {
   if (!id) return;
 
   if (player_status === 'playing' || player_status === 'paused') {
-    const key = player_info.mediaType === 'tv' && player_info.season && player_info.episode
-      ? `progress_${id}_s${player_info.season}_e${player_info.episode}`
+    const isTv = player_info.mediaType === 'tv' || type === 'tv';
+    const s = player_info.season || currentSeason;
+    const ep = player_info.episode || currentEpisode;
+    const key = isTv && s && ep
+      ? `progress_${id}_s${s}_e${ep}`
       : `progress_${id}`;
     if (player_progress > 5) {
-      localStorage.setItem(key, player_progress);
-      localStorage.setItem(`progress_${id}`, player_progress);
+      saveProgress(key, player_progress);
+      saveProgress(`progress_${id}`, player_progress);
+      if (isTv) {
+        saveTVState(id, s, ep);
+      }
+      // Track latest so we can flush on unload even if the tab closes abruptly
+      lastKnownProgress = { key, value: player_progress };
     }
   }
 
@@ -152,49 +276,35 @@ async function loadDetails() {
   try {
     const item = await (type === 'tv' ? getTVDetails(id) : getMovieDetails(id));
     currentMedia = item;
+
+    if (type === 'tv') {
+      const savedTv = getTVState(item.id);
+      if (savedTv && savedTv.season) {
+        currentSeason = Number(savedTv.season);
+        if (savedTv.episode) currentEpisode = Number(savedTv.episode);
+      }
+    }
+
     const director = (item.credits?.crew || []).find(p => p.job === 'Director')?.name || 'Not available';
     const trailer = (item.videos?.results || []).find(v => v.site === 'YouTube' && v.type === 'Trailer' && v.official)
       || (item.videos?.results || []).find(v => v.site === 'YouTube' && v.type === 'Trailer');
 
-    const playerHtml = `
-      <section class="preview content-section player-hidden" id="player-section">
-        <div class="player-header">
-          <span class="player-title" id="player-title">${titleOf(item)} ${type === 'tv' ? '— Season 1, Episode 1' : ''}</span>
-          <div class="player-controls-right">
-            <span class="player-status-badge">Stream Player</span>
-            <button type="button" class="player-close-btn" onclick="closePlayer()" title="Close player">✕ Close</button>
-          </div>
-        </div>
-        <div class="player-container">
-          <iframe id="media-player" src="about:blank" title="${titleOf(item)} player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-        </div>
-      </section>
-    `;
-
     const validSeasons = type === 'tv' ? (item.seasons || []).filter(s => s.season_number > 0) : [];
     const seasons = type === 'tv' && validSeasons.length ? `
-      <section class="seasons-section">
+      <aside class="seasons-section seasons-hidden">
         <div class="seasons-header">
           <div class="seasons-heading-left">
-            <h2>Seasons & Episodes</h2>
+            <span class="fact-label">Episodes</span>
             <span class="ep-count-pill" id="ep-count-pill">Episodes</span>
           </div>
           <div class="seasons-controls">
-            <input type="text" class="episodes-search-input" id="ep-search" placeholder="Search episode name or #" oninput="filterEpisodes(this.value)">
+            <input type="text" class="episodes-search-input" id="ep-search" placeholder="Search ep..." oninput="filterEpisodes(this.value)">
             <div class="season-select-wrapper">
               <select class="season-select" id="season-dropdown" onchange="switchSeason(Number(this.value))">
-                ${validSeasons.map(s => `<option value="${s.season_number}" ${s.season_number === currentSeason ? 'selected' : ''}>Season ${s.season_number} (${s.episode_count || 0} eps)</option>`).join('')}
+                ${validSeasons.map(s => `<option value="${s.season_number}" ${s.season_number === currentSeason ? 'selected' : ''}>S${s.season_number} (${s.episode_count || 0} eps)</option>`).join('')}
               </select>
             </div>
           </div>
-        </div>
-
-        <div class="season-tabs" id="season-tabs">
-          ${validSeasons.map(s => `
-            <button type="button" class="season-pill ${s.season_number === currentSeason ? 'active' : ''}" onclick="switchSeason(${s.season_number})">
-              Season ${s.season_number}
-            </button>
-          `).join('')}
         </div>
 
         <div class="episodes-scroll-wrapper">
@@ -202,8 +312,43 @@ async function loadDetails() {
             <div class="episodes-loader"><p class="result-count">Loading episodes…</p></div>
           </div>
         </div>
-      </section>
+      </aside>
     ` : '';
+
+    const playerHtml = `
+      <section class="preview content-section player-hidden" id="player-section">
+        <div class="player-header">
+          <span class="player-title" id="player-title">${titleOf(item)} ${type === 'tv' ? `— Season ${currentSeason}, Episode ${currentEpisode}` : ''}</span>
+          <div class="player-controls-right">
+            <span class="player-status-badge">Stream Player</span>
+            <button type="button" class="player-close-btn" onclick="closePlayer()" title="Close player">✕ Close</button>
+          </div>
+        </div>
+        <div class="player-body">
+          ${seasons}
+          <div class="player-container">
+            <iframe id="media-player" src="about:blank" title="${titleOf(item)} player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+          </div>
+          <aside class="source-panel source-panel-hidden">
+            <span class="fact-label">Video Sources</span>
+            <div class="source-options">
+              <button class="source-option active" id="source-vidsrc" type="button" onclick="updatePlayer('vidsrc'); scrollToPlayer();">
+                <span> VIDSRC</span>
+              </button>
+              <button class="source-option" id="source-vidapi" type="button" onclick="updatePlayer('vidapi'); scrollToPlayer();">
+                <span> VIDAPI</span>
+              </button>
+              ${trailer ? `
+                <button class="source-option" id="source-trailer" type="button" onclick="updatePlayer('trailer'); scrollToPlayer();">
+                  <span> Official Trailer</span>
+                </button>
+              ` : ''}
+            </div>
+            <p>Select your preferred streaming provider.</p>
+          </aside>
+        </div>
+      </section>
+    `;
 
     root.innerHTML = `
       <section class="detail-hero" style="background-image:url('${imageUrl(item.backdrop_path, 'original')}')">
@@ -215,30 +360,28 @@ async function loadDetails() {
             <span class="rating">★ ${(item.vote_average || 0).toFixed(1)}</span>
             <span>${(item.genres || []).map(g => g.name).join(' · ')}</span>
           </div>
-          <button class="button primary" onclick="updatePlayer('vidsrc'); scrollToPlayer();">▶ Watch now</button>
+          ${(() => {
+            const specificProgressKey = type === 'tv'
+              ? `progress_${item.id}_s${currentSeason}_e${currentEpisode}`
+              : `progress_${item.id}`;
+            const savedProgress = getProgress(specificProgressKey) || getProgress(`progress_${item.id}`);
+            const hasSaved = savedProgress && parseFloat(savedProgress) > 10;
+            const resumeLabel = type === 'tv'
+              ? `↩ Resume S${currentSeason}E${currentEpisode} (${formatTime(savedProgress)})`
+              : `↩ Resume from ${formatTime(savedProgress)}`;
+            return hasSaved
+              ? `<div class="watch-actions">
+                   <button class="button primary" onclick="updatePlayer('vidsrc', ${currentSeason}, ${currentEpisode}); scrollToPlayer();">${resumeLabel}</button>
+                   <button class="button secondary" onclick="clearMediaProgress('${item.id}'); location.reload();" title="Start over">▶ Watch from start</button>
+                 </div>`
+              : `<button class="button primary" onclick="updatePlayer('vidsrc', ${currentSeason}, ${currentEpisode}); scrollToPlayer();">▶ Watch now</button>`;
+          })()}
         </div>
       </section>
       ${playerHtml}
       <section class="details-body">
         <div class="details-sidebar">
           <img class="detail-poster" src="${imageUrl(item.poster_path)}" alt="${titleOf(item)} poster">
-          <aside class="source-panel">
-            <span class="fact-label">Video Sources</span>
-            <div class="source-options">
-              <button class="source-option active" id="source-vidsrc" type="button" onclick="updatePlayer('vidsrc'); scrollToPlayer();">
-                <span>⚡ VidSrc Server</span>
-              </button>
-              <button class="source-option" id="source-vidapi" type="button" onclick="updatePlayer('vidapi'); scrollToPlayer();">
-                <span>⚡ VidApi (vaplayer)</span>
-              </button>
-              ${trailer ? `
-                <button class="source-option" id="source-trailer" type="button" onclick="updatePlayer('trailer'); scrollToPlayer();">
-                  <span>▶ Official Trailer</span>
-                </button>
-              ` : ''}
-            </div>
-            <p>Select your preferred streaming provider or trailer preview.</p>
-          </aside>
         </div>
         <div class="details-main">
           <p class="detail-description">${item.overview || 'No overview is available.'}</p>
@@ -262,7 +405,6 @@ async function loadDetails() {
               </div>
             ` : ''}
           </div>
-          ${seasons}
         </div>
       </section>
       ${recommendations(item)}
@@ -324,21 +466,15 @@ async function loadSeason(number) {
     if (countBadge) countBadge.textContent = `${data.episodes.length} Episodes`;
     target.innerHTML = data.episodes.map(ep => {
       const isCurrent = currentSeason === number && currentEpisode === ep.episode_number;
-      const thumb = ep.still_path ? imageUrl(ep.still_path, 'w300') : '';
       return `
         <div class="episode-card ${isCurrent ? 'active' : ''}" id="ep-${number}-${ep.episode_number}" onclick="playEpisode(${number}, ${ep.episode_number})">
-          <div class="ep-thumb-wrapper">
-            ${thumb ? `<img src="${thumb}" alt="${ep.name}" loading="lazy" class="ep-thumb">` : `<div class="ep-thumb-empty"><span>EP ${ep.episode_number}</span></div>`}
-            <span class="ep-num-tag">E${ep.episode_number}</span>
-            <div class="ep-play-overlay">▶</div>
-          </div>
+
           <div class="ep-info">
             <div class="ep-header">
-              <span class="ep-badge">${number}x${ep.episode_number}</span>
+              <span class="ep-badge">S${number}E${ep.episode_number}</span>
               <h4 class="ep-name">${ep.name || `Episode ${ep.episode_number}`}</h4>
               <span class="ep-meta">${ep.runtime ? `${ep.runtime} min` : ''} ${ep.air_date ? `· ${ep.air_date}` : ''}</span>
             </div>
-            <p class="ep-overview">${ep.overview || 'No description available for this episode.'}</p>
           </div>
           <button type="button" class="ep-play-btn" onclick="event.stopPropagation(); playEpisode(${number}, ${ep.episode_number})" aria-label="Play episode">
             ${isCurrent ? 'Playing' : 'Play'}
