@@ -97,8 +97,15 @@ function recommendations(data) {
 }
 
 function getVidSrcUrl(mediaId, mediaType, season = 1, episode = 1) {
-  const progressKey = `progress_${mediaId}${mediaType === 'tv' ? `_s${season}_e${episode}` : ''}`;
-  const saved = getProgress(progressKey) || getProgress(`progress_${mediaId}`);
+  let saved;
+  if (mediaType === 'tv') {
+    // For TV, ONLY use the per-episode key — never fall back to the shared generic
+    // key, which would bleed the previous episode's timestamp into the new one.
+    const episodeKey = `progress_${mediaId}_s${season}_e${episode}`;
+    saved = getProgress(episodeKey);
+  } else {
+    saved = getProgress(`progress_${mediaId}`);
+  }
   const startParam = saved && parseFloat(saved) > 10 ? `&startAt=${Math.floor(parseFloat(saved))}` : '';
 
   if (mediaType === 'tv') {
@@ -362,12 +369,21 @@ async function loadDetails() {
     const item = await (type === 'tv' ? getTVDetails(id) : getMovieDetails(id));
     currentMedia = item;
 
+    // --- Resume state (TV) ---
+    // Keep track of where the user left off, but do NOT silently apply it to
+    // currentSeason/currentEpisode here — those stay at 1/1 for "Watch now".
+    // We only apply saved state when the user explicitly clicks "Resume".
+    let resumeSeason = 1;
+    let resumeEpisode = 1;
     if (type === 'tv') {
       const savedTv = getTVState(item.id);
       if (savedTv && savedTv.season) {
-        currentSeason = Number(savedTv.season);
-        if (savedTv.episode) currentEpisode = Number(savedTv.episode);
+        resumeSeason = Number(savedTv.season);
+        if (savedTv.episode) resumeEpisode = Number(savedTv.episode);
       }
+      // currentSeason / currentEpisode always default to 1/1 on page load
+      currentSeason = 1;
+      currentEpisode = 1;
     }
 
     const director = (item.credits?.crew || []).find(p => p.job === 'Director')?.name || 'Not available';
@@ -460,20 +476,23 @@ async function loadDetails() {
             <span>${(item.genres || []).map(g => g.name).join(' · ')}</span>
           </div>
           ${(() => {
+            // For TV: check saved progress at the resume position.
+            // For movies: check the single movie progress key.
             const specificProgressKey = type === 'tv'
-              ? `progress_${item.id}_s${currentSeason}_e${currentEpisode}`
+              ? `progress_${item.id}_s${resumeSeason}_e${resumeEpisode}`
               : `progress_${item.id}`;
-            const savedProgress = getProgress(specificProgressKey) || getProgress(`progress_${item.id}`);
+            const savedProgress = getProgress(specificProgressKey);
             const hasSaved = savedProgress && parseFloat(savedProgress) > 10;
             const resumeLabel = type === 'tv'
-              ? `↩ Resume S${currentSeason}E${currentEpisode} (${formatTime(savedProgress)})`
+              ? `↩ Resume S${resumeSeason}E${resumeEpisode} (${formatTime(savedProgress)})`
               : `↩ Resume from ${formatTime(savedProgress)}`;
+            // Watch now always plays from S1E1 for TV; Resume restores exact position.
             return hasSaved
               ? `<div class="watch-actions">
-                   <button class="button primary" onclick="updatePlayer('vidsrc', ${currentSeason}, ${currentEpisode}); scrollToPlayer();">${resumeLabel}</button>
+                   <button class="button primary" onclick="updatePlayer('vidsrc', ${resumeSeason}, ${resumeEpisode}); scrollToPlayer();">${resumeLabel}</button>
                    <button class="button secondary" onclick="clearMediaProgress('${item.id}'); location.reload();" title="Start over"><img src="assets/Logos/play-button.png" alt="Play" class="btn-play-icon"> Watch from start</button>
                  </div>`
-              : `<button class="button primary" onclick="updatePlayer('vidsrc', ${currentSeason}, ${currentEpisode}); scrollToPlayer();"><img src="assets/Logos/play-button.png" alt="Play" class="btn-play-icon"> Watch now</button>`;
+              : `<button class="button primary" onclick="updatePlayer('vidsrc', 1, 1); scrollToPlayer();"><img src="assets/Logos/play-button.png" alt="Play" class="btn-play-icon"> Watch now</button>`;
           })()}
         </div>
       </section>
