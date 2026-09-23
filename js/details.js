@@ -114,6 +114,34 @@ function getVidApiUrl(mediaId, mediaType, season = 1, episode = 1) {
   return `https://vaplayer.ru/embed/movie/${mediaId}`;
 }
 
+function getVidFastUrl(mediaId, mediaType, season = 1, episode = 1) {
+  if (mediaType === 'tv') {
+    return `https://vidfast.vc/tv/${mediaId}/${season}/${episode}?autoPlay=true`;
+  }
+  return `https://vidfast.vc/movie/${mediaId}?autoPlay=true`;
+}
+
+function getVidUpUrl(mediaId, mediaType, season = 1, episode = 1) {
+  if (mediaType === 'tv') {
+    return `https://vidup.to/tv/${mediaId}/${season}/${episode}`;
+  }
+  return `https://vidup.to/movie/${mediaId}?autoPlay=true`;
+}
+
+function getVidRockUrl(mediaId, mediaType, season = 1, episode = 1) {
+  if (mediaType === 'tv') {
+    return `https://vidrock.to/tv/${mediaId}/${season}/${episode}`;
+  }
+  return `https://vidrock.to/movie/${mediaId}`;
+}
+
+function getZxcPrimeUrl(mediaId, mediaType, season = 1, episode = 1) {
+  if (mediaType === 'tv') {
+    return `https://zxcstream.xyz/player/tv/${mediaId}/${season}/${episode}?dubLang=en`;
+  }
+  return `https://zxcstream.xyz/player/movie/${mediaId}?dubLang=en`;
+}
+
 function updatePlayer(source, s = currentSeason, ep = currentEpisode) {
   currentSource = source;
   currentSeason = s;
@@ -127,6 +155,10 @@ function updatePlayer(source, s = currentSeason, ep = currentEpisode) {
   const playerIframe = document.querySelector('#media-player');
   const playerTitle = document.querySelector('#player-title');
   const sourceVidsrcBtn = document.querySelector('#source-vidsrc');
+  const sourceVidfastBtn = document.querySelector('#source-vidfast');
+  const sourceVidupBtn = document.querySelector('#source-vidup');
+  const sourceVidrockBtn = document.querySelector('#source-vidrock');
+  const sourceZxcprimeBtn = document.querySelector('#source-zxcprime');
   const sourceVidapiBtn = document.querySelector('#source-vidapi');
   const sourceTrailerBtn = document.querySelector('#source-trailer');
   const sourcePanel = document.querySelector('.source-panel');
@@ -150,6 +182,10 @@ function updatePlayer(source, s = currentSeason, ep = currentEpisode) {
 
   // Reset active classes on source buttons
   if (sourceVidsrcBtn) sourceVidsrcBtn.classList.remove('active');
+  if (sourceVidfastBtn) sourceVidfastBtn.classList.remove('active');
+  if (sourceVidupBtn) sourceVidupBtn.classList.remove('active');
+  if (sourceVidrockBtn) sourceVidrockBtn.classList.remove('active');
+  if (sourceZxcprimeBtn) sourceZxcprimeBtn.classList.remove('active');
   if (sourceVidapiBtn) sourceVidapiBtn.classList.remove('active');
   if (sourceTrailerBtn) sourceTrailerBtn.classList.remove('active');
 
@@ -161,6 +197,38 @@ function updatePlayer(source, s = currentSeason, ep = currentEpisode) {
         : `${titleOf(currentMedia)} (VidSrc Server)`;
     }
     if (sourceVidsrcBtn) sourceVidsrcBtn.classList.add('active');
+  } else if (source === 'vidfast') {
+    playerIframe.src = getVidFastUrl(currentMedia.id, type, s, ep);
+    if (playerTitle) {
+      playerTitle.textContent = type === 'tv'
+        ? `${titleOf(currentMedia)} — Season ${s}, Episode ${ep} (VidFast)`
+        : `${titleOf(currentMedia)} (VidFast Server)`;
+    }
+    if (sourceVidfastBtn) sourceVidfastBtn.classList.add('active');
+  } else if (source === 'vidup') {
+    playerIframe.src = getVidUpUrl(currentMedia.id, type, s, ep);
+    if (playerTitle) {
+      playerTitle.textContent = type === 'tv'
+        ? `${titleOf(currentMedia)} — Season ${s}, Episode ${ep} (VidUp)`
+        : `${titleOf(currentMedia)} (VidUp Server)`;
+    }
+    if (sourceVidupBtn) sourceVidupBtn.classList.add('active');
+  } else if (source === 'vidrock') {
+    playerIframe.src = getVidRockUrl(currentMedia.id, type, s, ep);
+    if (playerTitle) {
+      playerTitle.textContent = type === 'tv'
+        ? `${titleOf(currentMedia)} — Season ${s}, Episode ${ep} (VidRock)`
+        : `${titleOf(currentMedia)} (VidRock Server)`;
+    }
+    if (sourceVidrockBtn) sourceVidrockBtn.classList.add('active');
+  } else if (source === 'zxcprime') {
+    playerIframe.src = getZxcPrimeUrl(currentMedia.id, type, s, ep);
+    if (playerTitle) {
+      playerTitle.textContent = type === 'tv'
+        ? `${titleOf(currentMedia)} — Season ${s}, Episode ${ep} (ZXCPRIME)`
+        : `${titleOf(currentMedia)} (ZXCPRIME Server)`;
+    }
+    if (sourceZxcprimeBtn) sourceZxcprimeBtn.classList.add('active');
   } else if (source === 'vidapi') {
     playerIframe.src = getVidApiUrl(currentMedia.id, type, s, ep);
     if (playerTitle) {
@@ -335,6 +403,18 @@ async function loadDetails() {
               <button class="source-option active" id="source-vidsrc" type="button" onclick="updatePlayer('vidsrc'); scrollToPlayer();">
                 <span> VIDSRC</span>
               </button>
+              <button class="source-option" id="source-vidfast" type="button" onclick="updatePlayer('vidfast'); scrollToPlayer();">
+                <span> VIDFAST</span>
+              </button>
+              <button class="source-option" id="source-vidup" type="button" onclick="updatePlayer('vidup'); scrollToPlayer();">
+                <span> VIDUP</span>
+              </button>
+              <button class="source-option" id="source-vidrock" type="button" onclick="updatePlayer('vidrock'); scrollToPlayer();">
+                <span> VIDROCK</span>
+              </button>
+              <button class="source-option" id="source-zxcprime" type="button" onclick="updatePlayer('zxcprime'); scrollToPlayer();">
+                <span> ZXCPRIME</span>
+              </button>
               <button class="source-option" id="source-vidapi" type="button" onclick="updatePlayer('vidapi'); scrollToPlayer();">
                 <span> VIDAPI</span>
               </button>
@@ -409,6 +489,7 @@ async function loadDetails() {
       </section>
       ${recommendations(item)}
     `;
+    setupRowScrollButtons();
 
     if (type === 'tv' && validSeasons.length) {
       if (!validSeasons.some(s => s.season_number === currentSeason)) {

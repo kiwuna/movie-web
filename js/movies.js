@@ -1,4 +1,71 @@
-async function loadHome(){const hero=document.querySelector('#hero');if(!hero)return;['trending','popular-movies','popular-tv','now-playing','upcoming'].forEach(id=>loading(document.querySelector(`#${id}`)));try{const [trending,popular,tv,now,upcoming]=await Promise.all([getTrendingMovies(),getPopularMovies(),getPopularTV(),getNowPlayingMovies(),getUpcomingMovies()]);const featured=trending.results[0];hero.style.backgroundImage=`url('${imageUrl(featured.backdrop_path,'original')}')`;hero.innerHTML=`<div class="hero-content"><p class="eyebrow">Featured premiere</p><h1>${titleOf(featured)}</h1><div class="meta"><span>${yearOf(featured)}</span><span class="rating">★ ${featured.vote_average.toFixed(1)}</span></div><p class="hero-description">${featured.overview||'Discover what everyone is talking about.'}</p><div class="hero-actions"><a class="button primary" href="details.html?id=${featured.id}&type=movie#preview"><img src="assets/Logos/play-button.png" alt="Play" class="btn-play-icon"> Watch preview</a><a class="button secondary" href="details.html?id=${featured.id}&type=movie">More info</a></div></div>`;document.querySelector('#trending').innerHTML=trending.results.slice(0,10).map(x=>card(x,'movie')).join('');document.querySelector('#popular-movies').innerHTML=popular.results.slice(0,10).map(x=>card(x,'movie')).join('');document.querySelector('#popular-tv').innerHTML=tv.results.slice(0,10).map(x=>card(x,'tv')).join('');document.querySelector('#now-playing').innerHTML=now.results.slice(0,10).map(x=>card(x,'movie')).join('');document.querySelector('#upcoming').innerHTML=upcoming.results.slice(0,10).map(x=>card(x,'movie')).join('');const genres=await getMovieGenres();document.querySelector('#genres').innerHTML=genres.genres.map(g=>`<a class="genre" href="movies.html?genre=${g.id}">${g.name}</a>`).join('')}catch(error){showError(hero,error.message)}}
+async function loadHome(){
+  const hero=document.querySelector('#hero');
+  if(!hero)return;
+  ['trending','popular-movies','popular-tv','now-playing','upcoming'].forEach(id=>loading(document.querySelector(`#${id}`)));
+  try{
+    const [trending,popular,tv,now,upcoming]=await Promise.all([getTrendingMovies(),getPopularMovies(),getPopularTV(),getNowPlayingMovies(),getUpcomingMovies()]);
+    const featuredItems=(trending.results||[]).slice(0,5);
+    if(featuredItems.length){
+      hero.innerHTML=`
+        <div class="hero-slider">
+          ${featuredItems.map((item,idx)=>`
+            <div class="hero-slide ${idx===0?'active':''}" style="background-image:url('${imageUrl(item.backdrop_path,'original')}');">
+              <div class="hero-content">
+                <p class="eyebrow">${idx===0?'Featured premiere':'Trending spotlight'}</p>
+                <h1>${titleOf(item)}</h1>
+                <div class="meta">
+                  <span>${yearOf(item)}</span>
+                  <span class="rating">★ ${(item.vote_average||0).toFixed(1)}</span>
+                </div>
+                <p class="hero-description">${item.overview||'Discover what everyone is talking about.'}</p>
+                <div class="hero-actions">
+                  <a class="button primary" href="details.html?id=${item.id}&type=movie#preview">
+                    <img src="assets/Logos/play-button.png" alt="Play" class="btn-play-icon"> Watch preview
+                  </a>
+                  <a class="button secondary" href="details.html?id=${item.id}&type=movie">More info</a>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        <div class="hero-nav">
+          <button class="hero-arrow" id="hero-prev" aria-label="Previous featured movie">‹</button>
+          <div class="hero-dots">
+            ${featuredItems.map((_,idx)=>`<button class="hero-dot ${idx===0?'active':''}" data-index="${idx}" aria-label="Slide ${idx+1}"></button>`).join('')}
+          </div>
+          <button class="hero-arrow" id="hero-next" aria-label="Next featured movie">›</button>
+        </div>
+      `;
+      let currentIdx=0;
+      const slides=hero.querySelectorAll('.hero-slide');
+      const dots=hero.querySelectorAll('.hero-dot');
+      function showSlide(idx){
+        currentIdx=(idx+slides.length)%slides.length;
+        slides.forEach((s,i)=>s.classList.toggle('active',i===currentIdx));
+        dots.forEach((d,i)=>d.classList.toggle('active',i===currentIdx));
+      }
+      let autoTimer=setInterval(()=>showSlide(currentIdx+1),6000);
+      function resetTimer(){
+        clearInterval(autoTimer);
+        autoTimer=setInterval(()=>showSlide(currentIdx+1),6000);
+      }
+      hero.querySelector('#hero-prev').onclick=()=>{showSlide(currentIdx-1);resetTimer()};
+      hero.querySelector('#hero-next').onclick=()=>{showSlide(currentIdx+1);resetTimer()};
+      dots.forEach(dot=>dot.onclick=()=>{showSlide(Number(dot.dataset.index));resetTimer()});
+    }
+    document.querySelector('#trending').innerHTML=trending.results.slice(0,10).map(x=>card(x,'movie')).join('');
+    document.querySelector('#popular-movies').innerHTML=popular.results.slice(0,10).map(x=>card(x,'movie')).join('');
+    document.querySelector('#popular-tv').innerHTML=tv.results.slice(0,10).map(x=>card(x,'tv')).join('');
+    document.querySelector('#now-playing').innerHTML=now.results.slice(0,10).map(x=>card(x,'movie')).join('');
+    document.querySelector('#upcoming').innerHTML=upcoming.results.slice(0,10).map(x=>card(x,'movie')).join('');
+    const genres=await getMovieGenres();
+    document.querySelector('#genres').innerHTML=genres.genres.map(g=>`<a class="genre" href="movies.html?genre=${g.id}">${g.name}</a>`).join('');
+    const extraData = await getPopularMovies();
+    document.querySelector('#extra').innerHTML = extraData.results.slice(0,10).map(x => card(x,'movie')).join('');
+    // Ensure scroll buttons for the new section
+    setupRowScrollButtons();
+  }catch(error){showError(hero,error.message)}
+}
 
 async function catalogPage(type){
   const grid=document.querySelector('#catalog-grid');
