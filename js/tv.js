@@ -15,8 +15,12 @@ async function catalogPage(){
     const data=await getTVGenres();
     data.genres.forEach(g=>genre.add(new Option(g.name,g.id)));
     genre.value=new URLSearchParams(location.search).get('genre')||'';
+    const currentYear=new Date().getFullYear();
+    for(let y=currentYear;y>=1950;y--)year.add(new Option(y,y));
+    year.value=new URLSearchParams(location.search).get('year')||'';
 
     function buildPagination(){
+      if(!paginationEl)return;
       if(totalPages<=1){paginationEl.hidden=true;return;}
       paginationEl.hidden=false;
       const p=currentPage,tp=totalPages;
@@ -36,7 +40,7 @@ async function catalogPage(){
     async function render(page=1){
       currentPage=page;
       loading(grid,20);
-      paginationEl.hidden=true;
+      if(paginationEl)paginationEl.hidden=true;
       window.scrollTo({top:0,behavior:'smooth'});
       const params={
         sort_by:sort.value==='rating'?'vote_average.desc':sort.value==='newest'?'first_air_date.desc':'popularity.desc',

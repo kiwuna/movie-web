@@ -372,9 +372,9 @@ async function loadDetails() {
             return hasSaved
               ? `<div class="watch-actions">
                    <button class="button primary" onclick="updatePlayer('vidsrc', ${currentSeason}, ${currentEpisode}); scrollToPlayer();">${resumeLabel}</button>
-                   <button class="button secondary" onclick="clearMediaProgress('${item.id}'); location.reload();" title="Start over">▶ Watch from start</button>
+                   <button class="button secondary" onclick="clearMediaProgress('${item.id}'); location.reload();" title="Start over"><img src="assets/Logos/play-button.png" alt="Play" class="btn-play-icon"> Watch from start</button>
                  </div>`
-              : `<button class="button primary" onclick="updatePlayer('vidsrc', ${currentSeason}, ${currentEpisode}); scrollToPlayer();">▶ Watch now</button>`;
+              : `<button class="button primary" onclick="updatePlayer('vidsrc', ${currentSeason}, ${currentEpisode}); scrollToPlayer();"><img src="assets/Logos/play-button.png" alt="Play" class="btn-play-icon"> Watch now</button>`;
           })()}
         </div>
       </section>
