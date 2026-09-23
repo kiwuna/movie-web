@@ -142,6 +142,13 @@ function getZxcPrimeUrl(mediaId, mediaType, season = 1, episode = 1) {
   return `https://zxcstream.xyz/player/movie/${mediaId}?dubLang=en`;
 }
 
+function getVidNestUrl(mediaId, mediaType, season = 1, episode = 1) {
+  if (mediaType === 'tv') {
+    return `https://vidnest.fun/tv/${mediaId}/${season}/${episode}`;
+  }
+  return `https://vidnest.fun/movie/${mediaId}`;
+}
+
 function updatePlayer(source, s = currentSeason, ep = currentEpisode) {
   currentSource = source;
   currentSeason = s;
@@ -159,6 +166,7 @@ function updatePlayer(source, s = currentSeason, ep = currentEpisode) {
   const sourceVidupBtn = document.querySelector('#source-vidup');
   const sourceVidrockBtn = document.querySelector('#source-vidrock');
   const sourceZxcprimeBtn = document.querySelector('#source-zxcprime');
+  const sourceVidnestBtn = document.querySelector('#source-vidnest');
   const sourceVidapiBtn = document.querySelector('#source-vidapi');
   const sourceTrailerBtn = document.querySelector('#source-trailer');
   const sourcePanel = document.querySelector('.source-panel');
@@ -186,6 +194,7 @@ function updatePlayer(source, s = currentSeason, ep = currentEpisode) {
   if (sourceVidupBtn) sourceVidupBtn.classList.remove('active');
   if (sourceVidrockBtn) sourceVidrockBtn.classList.remove('active');
   if (sourceZxcprimeBtn) sourceZxcprimeBtn.classList.remove('active');
+  if (sourceVidnestBtn) sourceVidnestBtn.classList.remove('active');
   if (sourceVidapiBtn) sourceVidapiBtn.classList.remove('active');
   if (sourceTrailerBtn) sourceTrailerBtn.classList.remove('active');
 
@@ -229,6 +238,14 @@ function updatePlayer(source, s = currentSeason, ep = currentEpisode) {
         : `${titleOf(currentMedia)} (ZXCPRIME Server)`;
     }
     if (sourceZxcprimeBtn) sourceZxcprimeBtn.classList.add('active');
+  } else if (source === 'vidnest') {
+    playerIframe.src = getVidNestUrl(currentMedia.id, type, s, ep);
+    if (playerTitle) {
+      playerTitle.textContent = type === 'tv'
+        ? `${titleOf(currentMedia)} — Season ${s}, Episode ${ep} (VidNest)`
+        : `${titleOf(currentMedia)} (VidNest Server)`;
+    }
+    if (sourceVidnestBtn) sourceVidnestBtn.classList.add('active');
   } else if (source === 'vidapi') {
     playerIframe.src = getVidApiUrl(currentMedia.id, type, s, ep);
     if (playerTitle) {
@@ -401,22 +418,25 @@ async function loadDetails() {
             <span class="fact-label">Video Sources</span>
             <div class="source-options">
               <button class="source-option active" id="source-vidsrc" type="button" onclick="updatePlayer('vidsrc'); scrollToPlayer();">
-                <span> VIDSRC</span>
+                <span> VidSrc</span>
               </button>
               <button class="source-option" id="source-vidfast" type="button" onclick="updatePlayer('vidfast'); scrollToPlayer();">
-                <span> VIDFAST</span>
+                <span> VidFast</span>
               </button>
               <button class="source-option" id="source-vidup" type="button" onclick="updatePlayer('vidup'); scrollToPlayer();">
-                <span> VIDUP</span>
+                <span> VidUp</span>
               </button>
               <button class="source-option" id="source-vidrock" type="button" onclick="updatePlayer('vidrock'); scrollToPlayer();">
-                <span> VIDROCK</span>
+                <span> VidRock</span>
               </button>
               <button class="source-option" id="source-zxcprime" type="button" onclick="updatePlayer('zxcprime'); scrollToPlayer();">
-                <span> ZXCPRIME</span>
+                <span> ZxcPrime</span>
+              </button>
+              <button class="source-option" id="source-vidnest" type="button" onclick="updatePlayer('vidnest'); scrollToPlayer();">
+                <span> VidNest</span>
               </button>
               <button class="source-option" id="source-vidapi" type="button" onclick="updatePlayer('vidapi'); scrollToPlayer();">
-                <span> VIDAPI</span>
+                <span> VidApi</span>
               </button>
               ${trailer ? `
                 <button class="source-option" id="source-trailer" type="button" onclick="updatePlayer('trailer'); scrollToPlayer();">
@@ -424,7 +444,6 @@ async function loadDetails() {
                 </button>
               ` : ''}
             </div>
-            <p>Select your preferred streaming provider.</p>
           </aside>
         </div>
       </section>
