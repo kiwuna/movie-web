@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#090b10" />
+    <title>Fhorts — Zanora</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+    <link rel="icon" href="./assets/Logos/Favico.png" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/fhorts.css" />
+  </head>
+  <body class="fhorts-page">
+    <header class="site-header"></header>
+    <main class="fhorts-shell">
+      <div class="fhorts-topbar">
+        <a class="fhorts-back" href="index.html" aria-label="Return to Zanora home">← Back to Zanora</a>
+        <div class="category-toggle">Categories</div>
+      </div>
+      <div class="genre-rail" id="fhorts-genres" aria-label="Filter Fhorts by genre"></div>
+      <section class="fhorts-feed" id="fhorts-feed" aria-live="polite"></section>
+      <p class="fhorts-status" id="fhorts-status">Finding trailers…</p>
+    </main>
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/fhorts.js"></script>
+  </body>
+</html>
