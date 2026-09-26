@@ -47,7 +47,7 @@
 
 .episode-card{display:flex;align-items:center;gap:10px;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:9px 12px;cursor:pointer;transition:background .2s,border-color .2s,transform .15s}
 .episode-card:hover{background:#1e2330;border-color:rgba(233,189,116,.4);transform:translateY(-1px)}
-.episode-card.active{border-color:var(--accent);background:rgba(233,189,116,.08);box-shadow:inset 3px 0 0 var(--accent)}
+.episode-card.active{background:rgba(233,189,116,.08);border-color:var(--accent)}
 
 
 .ep-info{flex:1;min-width:0}

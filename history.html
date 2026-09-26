@@ -3,25 +3,40 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <meta name="theme-color" content="#090b10" />
-    <title>Fhorts — Zanora</title>
+    <title>History — Zanora</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
-    <link rel="icon" href="./assets/Logos/Favico.png" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+     <link rel="icon" href="./assets/Logos/Favico.png">
     <link rel="stylesheet" href="css/style.css" />
-    <link rel="stylesheet" href="css/fhorts.css" />
   </head>
-  <body class="fhorts-page">
+  <body>
     <header class="site-header"></header>
-    <main class="fhorts-shell">
-      <div class="fhorts-topbar">
-        <div class="category-toggle">Categories</div>
+    <main class="catalog-page">
+      <div class="page-header">
+        <div>
+          <p class="eyebrow">Your watch history</p>
+          <h1>Movies you've watched.</h1>
+          <p class="intro">Your recently watched titles, saved locally.</p>
+        </div>
+        <button class="text-button" id="clear-history">Clear history</button>
       </div>
-      <div class="genre-rail" id="fhorts-genres" aria-label="Filter Fhorts by genre"></div>
-      <section class="fhorts-feed" id="fhorts-feed" aria-live="polite"></section>
-      <p class="fhorts-status" id="fhorts-status">Finding trailers…</p>
+      <p class="result-count" id="result-count"></p>
+      <div class="catalog-grid" id="history-grid"></div>
+      <div class="empty-state" id="empty-state" hidden>
+        No movies watched yet.<br /><button class="text-button" id="browse-movies">
+          Browse movies
+        </button>
+      </div>
     </main>
+    <footer>
+      ZANORA <span>•</span> This product uses the TMDB API but is not
+      endorsed or certified by TMDB.
+    </footer>
+    <div class="toast" id="toast"></div>
     
     <!-- Surprise Me Modal -->
     <div class="modal-overlay" id="surprise-modal" hidden>
@@ -70,10 +85,9 @@
         </div>
       </div>
     </div>
-    
     <script src="js/api.js"></script>
     <script src="js/app.js"></script>
-    <script src="js/fhorts.js"></script>
+    <script src="js/history.js"></script>
     <script src="js/surprise.js"></script>
   </body>
 </html>

@@ -1,7 +1,7 @@
 .fhorts-page { overflow: hidden; }
 .fhorts-page .site-header { position: fixed; width: 100%; background: rgba(9,11,16,.9); backdrop-filter: blur(10px); }
 .fhorts-shell { height: 100vh; background: #050609; }
-.fhorts-topbar { position: fixed; top: 76px; left: 0; right: 0; z-index: 12; display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; background: rgba(9,11,16,.6); backdrop-filter: blur(8px); }
+.fhorts-topbar { position: fixed; top: 76px; left: 0; right: 0; z-index: 12; display: flex; align-items: center; justify-content: flex-end; padding: 12px 20px; background: rgba(9,11,16,.6); backdrop-filter: blur(8px); }
 .fhorts-back { color: var(--text); font-size: 14px; text-decoration: none; transition: color .2s; }
 .fhorts-back:hover { color: var(--accent); }
 .category-toggle { color: var(--text); background: rgba(255,255,255,.1); border: none; border-radius: 6px; padding: 8px 16px; cursor: pointer; font-size: 13px; transition: background .2s; }

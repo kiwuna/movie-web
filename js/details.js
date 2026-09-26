@@ -165,6 +165,16 @@ function updatePlayer(source, s = currentSeason, ep = currentEpisode) {
     saveTVState(currentMedia.id, s, ep);
   }
 
+  // Add to history when user starts watching (not when switching to trailer)
+  if (currentMedia && source !== 'trailer') {
+    if (typeof addToHistory === 'function') {
+      addToHistory({
+        ...currentMedia,
+        media_type: type
+      });
+    }
+  }
+
   const playerSection = document.querySelector('#player-section');
   const playerIframe = document.querySelector('#media-player');
   const playerTitle = document.querySelector('#player-title');
