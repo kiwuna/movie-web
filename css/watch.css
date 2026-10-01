@@ -6,7 +6,7 @@
 .player-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px}
 .player-title{font-size:14px;color:var(--text);font-weight:600}
 .player-controls-right{display:flex;align-items:center;gap:10px}
-.player-status-badge{font-size:11px;padding:3px 8px;border-radius:20px;background:rgba(233,189,116,.15);color:var(--accent);text-transform:uppercase;letter-spacing:.08em}
+.player-status-badge{font-size:11px;padding:3px 8px;border-radius:20px;background:rgba(185,232,234,.15);color:var(--accent);text-transform:uppercase;letter-spacing:.08em}
 .player-close-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:var(--muted);font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;cursor:pointer;transition:.2s}
 .player-close-btn:hover{background:rgba(255,255,255,.16);color:var(--text)}
 
@@ -15,8 +15,8 @@
 .source-options{display:flex;flex-direction:column;gap:8px;margin-top:8px}
 .source-option{width:100%;padding:11px 14px;text-align:left;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.03);color:var(--muted);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:.2s}
 .source-option:hover{background:rgba(255,255,255,.07);color:var(--text)}
-.source-option.active{border-color:rgba(233,189,116,.6);background:rgba(233,189,116,.12);color:var(--text);font-weight:600}
-.source-option.active::after{content:'● Active';color:var(--accent);font-size:11px}
+.source-option.active{border-color:rgba(185,232,234,.4);background:rgba(185,232,234,.08);color:var(--text);font-weight:600}
+.source-option.active::after{content:'•';color:var(--accent);font-size:16px}
 .source-panel p{margin:12px 0 0;color:var(--muted);font-size:12px;line-height:1.55}
 
 /* Seasons & Episode Sidebar on left side of Player */
@@ -25,7 +25,7 @@
 .seasons-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px}
 .seasons-heading-left{display:flex;align-items:center;gap:8px}
 .seasons-heading-left .fact-label{margin-bottom:0}
-.ep-count-pill{font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px;background:rgba(233,189,116,.12);color:var(--accent);letter-spacing:.05em;border:1px solid rgba(233,189,116,.25)}
+.ep-count-pill{font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px;background:rgba(185,232,234,.12);color:var(--accent);letter-spacing:.05em;border:1px solid rgba(185,232,234,.25)}
 .seasons-controls{display:flex;align-items:center;gap:6px;width:100%;margin-top:6px}
 .episodes-search-input{background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:6px 10px;color:var(--text);font-size:12px;flex:1;min-width:0;outline:none;transition:border-color .2s}
 .episodes-search-input:focus{border-color:var(--accent)}
@@ -36,18 +36,18 @@
 
 
 /* Scrollable Episode Container: Fit inside player sidebar */
-.episodes-scroll-wrapper{flex:1;min-height:220px;max-height:450px;overflow-y:auto;padding-right:4px;scrollbar-width:thin;scrollbar-color:rgba(233,189,116,.4) rgba(255,255,255,.04)}
+.episodes-scroll-wrapper{flex:1;min-height:220px;max-height:450px;overflow-y:auto;padding-right:4px;scrollbar-width:thin;scrollbar-color:rgba(185,232,234,.4) rgba(255,255,255,.04)}
 .episodes-scroll-wrapper::-webkit-scrollbar{width:5px}
 .episodes-scroll-wrapper::-webkit-scrollbar-track{background:rgba(255,255,255,.04);border-radius:8px}
-.episodes-scroll-wrapper::-webkit-scrollbar-thumb{background:rgba(233,189,116,.4);border-radius:8px}
+.episodes-scroll-wrapper::-webkit-scrollbar-thumb{background:rgba(185,232,234,.4);border-radius:8px}
 .episodes-scroll-wrapper::-webkit-scrollbar-thumb:hover{background:var(--accent)}
 
 .episodes-container{display:flex;flex-direction:column;gap:6px}
 .episodes-loader{padding:18px 0;text-align:center}
 
 .episode-card{display:flex;align-items:center;gap:10px;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:9px 12px;cursor:pointer;transition:background .2s,border-color .2s,transform .15s}
-.episode-card:hover{background:#1e2330;border-color:rgba(233,189,116,.4);transform:translateY(-1px)}
-.episode-card.active{background:rgba(233,189,116,.08);border-color:var(--accent)}
+.episode-card:hover{background:#1e2330;border-color:rgba(185,232,234,.4);transform:translateY(-1px)}
+.episode-card.active{background:rgba(185,232,234,.08);border-color:var(--accent)}
 
 
 .ep-info{flex:1;min-width:0}

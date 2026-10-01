@@ -17,7 +17,7 @@ async function loadHome(){
                   <span>${yearOf(item)}</span>
                   <span class="rating">★ ${(item.vote_average||0).toFixed(1)}</span>
                 </div>
-                <p class="hero-description">${item.overview||'Discover what everyone is talking about.'}</p>
+                <p class="hero-description">${(item.overview||'Discover what everyone is talking about.').slice(0,150)}${(item.overview?.length>150)?'...':''}</p>
                 <div class="hero-actions">
                   <a class="button primary" href="details.html?id=${item.id}&type=movie#preview">
                     <img src="assets/Logos/play-button.png" alt="Play" class="btn-play-icon"> Watch preview

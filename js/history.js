@@ -63,7 +63,7 @@ function historyCard(item) {
         <div class="card-overlay">
           <h3>${item.title}</h3>
           <p>${year} <span class="rating">★ ${(item.vote_average || 0).toFixed(1)}</span></p>
-          <span class="card-action">View details →</span>
+          <span class="card-action">View details <img class="arrow-icon" src="assets/arrow-right.svg"></span>
         </div>
       </a>
     </div>
