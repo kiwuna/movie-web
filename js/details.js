@@ -88,7 +88,20 @@ window.addEventListener('beforeunload', flushProgress);
 window.addEventListener('pagehide', flushProgress);
 
 function castList(data) {
-  return (data.credits?.cast || []).slice(0, 6).map(p => p.name).join(', ') || 'Not available';
+  const cast = (data.credits?.cast || []).slice(0, 6);
+  if (!cast.length) return 'Not available';
+  
+  return cast.map(person => {
+    const profileImage = person.profile_path 
+      ? imageUrl(person.profile_path, 'w185')
+      : 'https://placehold.co/185x278/161a23/a7abb6?text=No+Image';
+    return `
+      <div class="cast-item">
+        <img class="cast-image" src="${profileImage}" alt="${person.name}" loading="lazy">
+        <span class="cast-name">${person.name}</span>
+      </div>
+    `;
+  }).join('');
 }
 
 function recommendations(data) {
@@ -522,16 +535,16 @@ async function loadDetails() {
               <span class="fact-label">${type === 'tv' ? 'Seasons' : 'Runtime'}</span>
               <span class="fact-value">${type === 'tv' ? item.number_of_seasons : `${item.runtime || '—'} min`}</span>
             </div>
-            <div>
-              <span class="fact-label">Cast</span>
-              <span class="fact-value">${castList(item)}</span>
-            </div>
             ${type === 'movie' ? `
               <div>
                 <span class="fact-label">Director</span>
                 <span class="fact-value">${director}</span>
               </div>
             ` : ''}
+          </div>
+          <div class="cast-section">
+            <span class="fact-label">Cast</span>
+            <div class="cast-list">${castList(item)}</div>
           </div>
         </div>
       </section>
