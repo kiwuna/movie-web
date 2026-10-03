@@ -86,4 +86,15 @@
 }
 
 /* Resume / Watch-from-start button row */
-.watch-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:0}
+.watch-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:0;align-items:center}
+
+/* Download buttons */
+.button.download-btn svg{stroke:currentColor;transition:transform .2s ease}
+.button.download-btn:hover svg{transform:translateY(1px)}
+
+.player-download-btn{background:rgba(185,232,234,.12);border:1px solid rgba(185,232,234,.3);color:var(--accent);font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:all .2s ease}
+.player-download-btn:hover{background:var(--accent);color:#000000;border-color:var(--accent)}
+.player-download-btn svg{stroke:currentColor}
+
+.download-source-option{border-color:rgba(185,232,234,.3);color:var(--accent);margin-top:4px}
+.download-source-option:hover{background:rgba(185,232,234,.15);color:#ffffff;border-color:var(--accent)}

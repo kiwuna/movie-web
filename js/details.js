@@ -439,12 +439,19 @@ async function loadDetails() {
       </aside>
     ` : '';
 
+    const movieTitle = titleOf(item);
+    const downloadUrl = `https://videodownloader.site/?${new URLSearchParams({ q: movieTitle }).toString()}`;
+
     const playerHtml = `
       <section class="preview content-section player-hidden" id="player-section">
         <div class="player-header">
           <span class="player-title" id="player-title">${titleOf(item)} ${type === 'tv' ? `— Season ${currentSeason}, Episode ${currentEpisode}` : ''}</span>
           <div class="player-controls-right">
             <span class="player-status-badge">Stream Player</span>
+            <a class="player-download-btn" id="player-download-link" href="${downloadUrl}" target="_blank" rel="noopener noreferrer" title="Download ${titleOf(item)}">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download
+            </a>
             <button type="button" class="player-close-btn" onclick="closePlayer()" title="Close player">✕ Close</button>
           </div>
         </div>
@@ -482,6 +489,9 @@ async function loadDetails() {
                   <span> Official Trailer</span>
                 </button>
               ` : ''}
+              <a class="source-option download-source-option" href="${downloadUrl}" target="_blank" rel="noopener noreferrer">
+                <span>⬇ Download Movie</span>
+              </a>
             </div>
           </aside>
         </div>
@@ -509,13 +519,23 @@ async function loadDetails() {
             const resumeLabel = type === 'tv'
               ? `↩ Resume S${resumeSeason}E${resumeEpisode} (${formatTime(savedProgress)})`
               : `↩ Resume from ${formatTime(savedProgress)}`;
+            const downloadBtn = `
+              <a class="button secondary download-btn" href="${downloadUrl}" target="_blank" rel="noopener noreferrer" title="Download ${movieTitle}">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Download
+              </a>
+            `;
             // Watch now always plays from S1E1 for TV; Resume restores exact position.
             return hasSaved
               ? `<div class="watch-actions">
                    <button class="button primary" onclick="updatePlayer('vidsrc', ${resumeSeason}, ${resumeEpisode}); scrollToPlayer();">${resumeLabel}</button>
                    <button class="button secondary" onclick="clearMediaProgress('${item.id}'); location.reload();" title="Start over"><img src="assets/Logos/play-button.png" alt="Play" class="btn-play-icon"> Watch from start</button>
+                   ${downloadBtn}
                  </div>`
-              : `<button class="button primary" onclick="updatePlayer('vidsrc', 1, 1); scrollToPlayer();"><img src="assets/Logos/play-button.png" alt="Play" class="btn-play-icon"> Watch now</button>`;
+              : `<div class="watch-actions">
+                   <button class="button primary" onclick="updatePlayer('vidsrc', 1, 1); scrollToPlayer();"><img src="assets/Logos/play-button.png" alt="Play" class="btn-play-icon"> Watch now</button>
+                   ${downloadBtn}
+                 </div>`;
           })()}
         </div>
       </section>
@@ -557,6 +577,12 @@ async function loadDetails() {
         currentSeason = validSeasons[0].season_number;
       }
       loadSeason(currentSeason);
+    }
+    if (location.hash === '#preview') {
+      setTimeout(() => {
+        updatePlayer('trailer');
+        scrollToPlayer();
+      }, 300);
     }
   } catch (e) {
     console.error('Details loading error:', e);
