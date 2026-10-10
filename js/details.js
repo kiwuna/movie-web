@@ -8,6 +8,8 @@ let currentSource = 'vidsrc'; // 'vidsrc' | 'vidapi' | 'trailer'
 let currentSeason = 1;
 let currentEpisode = 1;
 let lastKnownProgress = null; // { key, value } — updated on every PLAYER_EVENT
+let pipWindow = null; // Document Picture-in-Picture window
+let mainPlayerSrcBeforePiP = null; // Store main player URL before PiP
 
 function formatTime(seconds) {
   const s = Math.floor(parseFloat(seconds));
@@ -330,6 +332,177 @@ function closePlayer() {
   if (seasonsSection) {
     seasonsSection.classList.add('seasons-hidden');
   }
+  // Close PiP window if open
+  if (pipWindow) {
+    pipWindow.close();
+    pipWindow = null;
+  }
+}
+
+async function togglePictureInPicture() {
+  const playerIframe = document.querySelector('#media-player');
+  const pipBtn = document.querySelector('#pip-btn');
+  
+  if (!playerIframe) return;
+
+  // If PiP window is already open, close it and restore main player
+  if (pipWindow) {
+    // Restore main player with current timestamp
+    if (mainPlayerSrcBeforePiP) {
+      // Get current progress to resume from latest position
+      const progressKey = type === 'tv'
+        ? `progress_${currentMedia.id}_s${currentSeason}_e${currentEpisode}`
+        : `progress_${currentMedia.id}`;
+      const savedProgress = getProgress(progressKey);
+      
+      let restoreUrl = mainPlayerSrcBeforePiP;
+      if (savedProgress && parseFloat(savedProgress) > 10) {
+        // Remove any existing startAt parameter and add new one
+        const urlWithoutStart = mainPlayerSrcBeforePiP.split('&startAt=')[0].split('?startAt=')[0];
+        const separator = urlWithoutStart.includes('?') ? '&' : '?';
+        restoreUrl = urlWithoutStart + separator + `startAt=${Math.floor(parseFloat(savedProgress))}`;
+      }
+      
+      playerIframe.src = restoreUrl;
+      mainPlayerSrcBeforePiP = null;
+    }
+    pipWindow.close();
+    pipWindow = null;
+    if (pipBtn) pipBtn.classList.remove('active');
+    return;
+  }
+
+  // Check if Document Picture-in-Picture API is supported
+  if (!('documentPictureInPicture' in window)) {
+    toast('Picture-in-Picture is not supported in this browser');
+    return;
+  }
+
+  try {
+    // Store current URL with timestamp
+    const currentSrc = playerIframe.src;
+    mainPlayerSrcBeforePiP = currentSrc; // Store for later restoration
+    let pipSrc = currentSrc;
+    
+    // Check if it already has startAt
+    if (!currentSrc.includes('startAt=')) {
+      // Try to get current progress
+      const progressKey = type === 'tv'
+        ? `progress_${currentMedia.id}_s${currentSeason}_e${currentEpisode}`
+        : `progress_${currentMedia.id}`;
+      const savedProgress = getProgress(progressKey);
+      if (savedProgress && parseFloat(savedProgress) > 10) {
+        const separator = currentSrc.includes('?') ? '&' : '?';
+        pipSrc = currentSrc + separator + `startAt=${Math.floor(parseFloat(savedProgress))}`;
+      }
+    }
+
+    // Hide main player
+    playerIframe.src = 'about:blank';
+
+    // Calculate aspect ratio (most videos are 16:9)
+    const aspectRatio = 16 / 9;
+    const baseWidth = 1280;
+    const baseHeight = Math.round(baseWidth / aspectRatio);
+
+    // Request a new PiP window with aspect ratio
+    pipWindow = await window.documentPictureInPicture.requestWindow({
+      width: baseWidth,
+      height: baseHeight
+    });
+
+    // Set window title to clean name
+    pipWindow.document.title = currentMedia ? titleOf(currentMedia) : 'Picture in Picture';
+
+    // Copy essential styles to the PiP window for aspect ratio maintenance
+    const style = `
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; background: #000; overflow: hidden; width: 100%; height: 100%; }
+      body { display: flex; align-items: center; justify-content: center; }
+      .video-container {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      iframe {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border: none;
+        display: block;
+        object-fit: contain;
+      }
+    `;
+    
+    const styleElement = document.createElement('style');
+    styleElement.textContent = style;
+    pipWindow.document.head.appendChild(styleElement);
+
+    // Create container for aspect ratio
+    const container = document.createElement('div');
+    container.className = 'video-container';
+
+    // Create iframe for PiP
+    const pipIframe = document.createElement('iframe');
+    pipIframe.src = pipSrc;
+    pipIframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+    pipIframe.allowFullscreen = true;
+    
+    container.appendChild(pipIframe);
+    pipWindow.document.body.appendChild(container);
+
+    // Handle PiP window close - restore main player with current timestamp
+    pipWindow.addEventListener('pagehide', () => {
+      if (mainPlayerSrcBeforePiP) {
+        // Get current progress to resume from latest position
+        const progressKey = type === 'tv'
+          ? `progress_${currentMedia.id}_s${currentSeason}_e${currentEpisode}`
+          : `progress_${currentMedia.id}`;
+        const savedProgress = getProgress(progressKey);
+        
+        let restoreUrl = mainPlayerSrcBeforePiP;
+        if (savedProgress && parseFloat(savedProgress) > 10) {
+          // Remove any existing startAt parameter and add new one
+          const urlWithoutStart = mainPlayerSrcBeforePiP.split('&startAt=')[0].split('?startAt=')[0];
+          const separator = urlWithoutStart.includes('?') ? '&' : '?';
+          restoreUrl = urlWithoutStart + separator + `startAt=${Math.floor(parseFloat(savedProgress))}`;
+        }
+        
+        playerIframe.src = restoreUrl;
+        mainPlayerSrcBeforePiP = null;
+      }
+      pipWindow = null;
+      if (pipBtn) pipBtn.classList.remove('active');
+    });
+
+    if (pipBtn) pipBtn.classList.add('active');
+    toast('Picture-in-Picture mode enabled');
+
+  } catch (error) {
+    console.error('PiP error:', error);
+    toast('Failed to enable Picture-in-Picture');
+    pipWindow = null;
+    // Restore main player on error with current timestamp
+    if (mainPlayerSrcBeforePiP) {
+      const progressKey = type === 'tv'
+        ? `progress_${currentMedia.id}_s${currentSeason}_e${currentEpisode}`
+        : `progress_${currentMedia.id}`;
+      const savedProgress = getProgress(progressKey);
+      
+      let restoreUrl = mainPlayerSrcBeforePiP;
+      if (savedProgress && parseFloat(savedProgress) > 10) {
+        const urlWithoutStart = mainPlayerSrcBeforePiP.split('&startAt=')[0].split('?startAt=')[0];
+        const separator = urlWithoutStart.includes('?') ? '&' : '?';
+        restoreUrl = urlWithoutStart + separator + `startAt=${Math.floor(parseFloat(savedProgress))}`;
+      }
+      
+      playerIframe.src = restoreUrl;
+      mainPlayerSrcBeforePiP = null;
+    }
+  }
 }
 
 function scrollToPlayer() {
@@ -445,13 +618,9 @@ async function loadDetails() {
     const playerHtml = `
       <section class="preview content-section player-hidden" id="player-section">
         <div class="player-header">
-          <span class="player-title" id="player-title">${titleOf(item)} ${type === 'tv' ? `— Season ${currentSeason}, Episode ${currentEpisode}` : ''}</span>
+          <span class="player-title" id="player-title">${titleOf(item)} ${type === 'tv' ? `— Season ${currentSeason}, Episode ${currentEpisode}` : ''} (VidSrc Server)</span>
           <div class="player-controls-right">
             <span class="player-status-badge">Stream Player</span>
-            <a class="player-download-btn" id="player-download-link" href="${downloadUrl}" target="_blank" rel="noopener noreferrer" title="Download ${titleOf(item)}">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Download
-            </a>
             <button type="button" class="player-close-btn" onclick="closePlayer()" title="Close player">✕ Close</button>
           </div>
         </div>
@@ -489,9 +658,10 @@ async function loadDetails() {
                   <span> Official Trailer</span>
                 </button>
               ` : ''}
-              <a class="source-option download-source-option" href="${downloadUrl}" target="_blank" rel="noopener noreferrer">
-                <span>⬇ Download Movie</span>
-              </a>
+              <button class="source-option pip-option" id="pip-btn" type="button" onclick="togglePictureInPicture()">
+                <img src="assets/PIP.svg" alt="Picture in Picture" class="pip-icon">
+                <span> Picture in Picture</span>
+              </button>
             </div>
           </aside>
         </div>
@@ -538,6 +708,12 @@ async function loadDetails() {
                  </div>`;
           })()}
         </div>
+        <div class="detail-hero-poster">
+          <div class="detail-poster-inner">
+            <img class="detail-poster" src="${imageUrl(item.poster_path)}" alt="${titleOf(item)} poster">
+            <div class="poster-shine"></div>
+          </div>
+        </div>
       </section>
       ${playerHtml}
       <section class="details-body">
@@ -571,6 +747,7 @@ async function loadDetails() {
       ${recommendations(item)}
     `;
     setupRowScrollButtons();
+    initPosterTilt();
 
     if (type === 'tv' && validSeasons.length) {
       if (!validSeasons.some(s => s.season_number === currentSeason)) {
@@ -588,6 +765,52 @@ async function loadDetails() {
     console.error('Details loading error:', e);
     showError(root, e.message);
   }
+}
+
+function initPosterTilt() {
+  const container = document.querySelector('.detail-hero-poster');
+  const card = container ? container.querySelector('.detail-poster-inner') : null;
+  const shine = container ? container.querySelector('.poster-shine') : null;
+  if (!container || !card) return;
+
+  let rafId = null;
+  const maxTilt = 14;
+
+  const onMouseMove = (e) => {
+    const rect = container.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const normalX = (x / rect.width) * 2 - 1;
+    const normalY = (y / rect.height) * 2 - 1;
+
+    const rotateX = -normalY * maxTilt;
+    const rotateY = normalX * maxTilt;
+
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(() => {
+      card.style.transform = `perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) scale3d(1.04, 1.04, 1.04)`;
+      if (shine) {
+        const px = Math.max(0, Math.min(100, (x / rect.width) * 100));
+        const py = Math.max(0, Math.min(100, (y / rect.height) * 100));
+        shine.style.background = `radial-gradient(circle at ${px.toFixed(1)}% ${py.toFixed(1)}%, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0) 65%)`;
+      }
+    });
+  };
+
+  const onMouseEnter = () => {
+    card.style.transition = 'transform 0.12s ease-out, box-shadow 0.3s ease';
+  };
+
+  const onMouseLeave = () => {
+    if (rafId) cancelAnimationFrame(rafId);
+    card.style.transition = 'transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.5s ease';
+    card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
+  };
+
+  container.addEventListener('mousemove', onMouseMove);
+  container.addEventListener('mouseenter', onMouseEnter);
+  container.addEventListener('mouseleave', onMouseLeave);
 }
 
 function switchSeason(number) {

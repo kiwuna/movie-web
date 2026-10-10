@@ -30,7 +30,27 @@ const server = http.createServer(async (request, response) => {
     } catch { response.writeHead(502, { 'Content-Type': 'application/json' }).end(JSON.stringify({ error: 'Could not reach TMDB.' })); }
     return;
   }
-  const requested = url.pathname === '/' ? '/index.html' : url.pathname;
+
+  // URL rewriting for clean paths without .html extension
+  const pathMap = {
+    '/home': 'index.html',
+    '/movies': 'movies.html',
+    '/tv': 'tv.html',
+    '/search': 'search.html',
+    '/history': 'history.html',
+    '/clips': 'clips.html',
+    '/details': 'details.html',
+    '/watch': 'watch.html',
+    '/fhorts': 'fhorts.html'
+  };
+
+  let requested = url.pathname;
+  if (requested === '/') {
+    requested = '/index.html';
+  } else if (pathMap[requested]) {
+    requested = '/' + pathMap[requested];
+  }
+
   const file = path.normalize(path.join(__dirname, requested));
   if (!file.startsWith(__dirname) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) return response.writeHead(404).end('Not found');
   response.writeHead(200, { 'Content-Type': types[path.extname(file)] || 'application/octet-stream' });
@@ -47,7 +67,7 @@ function startServer(port) {
       throw error;
     }
   });
-  server.listen(port, () => console.log(`Reelhouse is running at http://localhost:${port}`));
+  server.listen(port, () => console.log(`Zanora is running at http://localhost:${port}`));
 }
 
 startServer(Number(process.env.PORT) || 3000);

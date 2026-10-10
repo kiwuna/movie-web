@@ -4,6 +4,18 @@ async function loadHome(){
   ['trending','popular-movies','popular-tv','now-playing','upcoming'].forEach(id=>loading(document.querySelector(`#${id}`)));
   try{
     const [trending,popular,tv,now,upcoming]=await Promise.all([getTrendingMovies(),getPopularMovies(),getPopularTV(),getNowPlayingMovies(),getUpcomingMovies()]);
+    
+    // Load continue watching section
+    const continueSection = document.querySelector('#continue-section');
+    const continueRow = document.querySelector('#continue-watching');
+    if(continueSection && continueRow){
+      const history = getHistory();
+      if(history.length > 0){
+        continueRow.innerHTML = history.slice(0,10).map(item => card(item, item.media_type === 'tv' ? 'tv' : 'movie')).join('');
+      }else{
+        continueSection.hidden = true;
+      }
+    }
     const featuredItems=(trending.results||[]).slice(0,5);
     if(featuredItems.length){
       hero.innerHTML=`
@@ -19,10 +31,10 @@ async function loadHome(){
                 </div>
                 <p class="hero-description">${(item.overview||'Discover what everyone is talking about.').slice(0,150)}${(item.overview?.length>150)?'...':''}</p>
                 <div class="hero-actions">
-                  <a class="button primary" href="details.html?id=${item.id}&type=movie#preview">
+                  <a class="button primary" href="/details?id=${item.id}&type=movie#preview">
                     <img src="assets/Logos/play-button.png" alt="Play" class="btn-play-icon"> Watch preview
                   </a>
-                  <a class="button secondary" href="details.html?id=${item.id}&type=movie">More info</a>
+                  <a class="button secondary" href="/details?id=${item.id}&type=movie">More info</a>
                 </div>
               </div>
             </div>
@@ -59,7 +71,7 @@ async function loadHome(){
     document.querySelector('#now-playing').innerHTML=now.results.slice(0,10).map(x=>card(x,'movie')).join('');
     document.querySelector('#upcoming').innerHTML=upcoming.results.slice(0,10).map(x=>card(x,'movie')).join('');
     const genres=await getMovieGenres();
-    document.querySelector('#genres').innerHTML=genres.genres.map(g=>`<a class="genre" href="movies.html?genre=${g.id}">${g.name}</a>`).join('');
+    document.querySelector('#genres').innerHTML=genres.genres.map(g=>`<a class="genre" href="/movies?genre=${g.id}">${g.name}</a>`).join('');
     const extraData = await getPopularMovies();
     document.querySelector('#extra').innerHTML = extraData.results.slice(0,10).map(x => card(x,'movie')).join('');
     // Ensure scroll buttons for the new section
