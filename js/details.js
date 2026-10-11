@@ -4,7 +4,7 @@ const params = new URLSearchParams(location.search),
   root = document.querySelector('#details');
 
 let currentMedia = null;
-let currentSource = 'vidsrc'; // 'vidsrc' | 'vidapi' | 'trailer'
+let currentSource = 'zxcprime'; // 'zxcprime' | 'vidsrc' | 'vidapi' | 'trailer'
 let currentSeason = 1;
 let currentEpisode = 1;
 let lastKnownProgress = null; // { key, value } — updated on every PLAYER_EVENT
@@ -230,7 +230,15 @@ function updatePlayer(source, s = currentSeason, ep = currentEpisode) {
   if (sourceVidapiBtn) sourceVidapiBtn.classList.remove('active');
   if (sourceTrailerBtn) sourceTrailerBtn.classList.remove('active');
 
-  if (source === 'vidsrc') {
+  if (source === 'zxcprime') {
+    playerIframe.src = getZxcPrimeUrl(currentMedia.id, type, s, ep);
+    if (playerTitle) {
+      playerTitle.textContent = type === 'tv'
+        ? `${titleOf(currentMedia)} — Season ${s}, Episode ${ep} (ZxcPrime)`
+        : `${titleOf(currentMedia)} (ZxcPrime Server)`;
+    }
+    if (sourceZxcprimeBtn) sourceZxcprimeBtn.classList.add('active');
+  } else if (source === 'vidsrc') {
     playerIframe.src = getVidSrcUrl(currentMedia.id, type, s, ep);
     if (playerTitle) {
       playerTitle.textContent = type === 'tv'
@@ -238,14 +246,6 @@ function updatePlayer(source, s = currentSeason, ep = currentEpisode) {
         : `${titleOf(currentMedia)} (VidSrc Server)`;
     }
     if (sourceVidsrcBtn) sourceVidsrcBtn.classList.add('active');
-  } else if (source === 'vidfast') {
-    playerIframe.src = getVidFastUrl(currentMedia.id, type, s, ep);
-    if (playerTitle) {
-      playerTitle.textContent = type === 'tv'
-        ? `${titleOf(currentMedia)} — Season ${s}, Episode ${ep} (VidFast)`
-        : `${titleOf(currentMedia)} (VidFast Server)`;
-    }
-    if (sourceVidfastBtn) sourceVidfastBtn.classList.add('active');
   } else if (source === 'vidup') {
     playerIframe.src = getVidUpUrl(currentMedia.id, type, s, ep);
     if (playerTitle) {
@@ -262,14 +262,14 @@ function updatePlayer(source, s = currentSeason, ep = currentEpisode) {
         : `${titleOf(currentMedia)} (VidRock Server)`;
     }
     if (sourceVidrockBtn) sourceVidrockBtn.classList.add('active');
-  } else if (source === 'zxcprime') {
-    playerIframe.src = getZxcPrimeUrl(currentMedia.id, type, s, ep);
+  } else if (source === 'vidfast') {
+    playerIframe.src = getVidFastUrl(currentMedia.id, type, s, ep);
     if (playerTitle) {
       playerTitle.textContent = type === 'tv'
-        ? `${titleOf(currentMedia)} — Season ${s}, Episode ${ep} (ZXCPRIME)`
-        : `${titleOf(currentMedia)} (ZXCPRIME Server)`;
+        ? `${titleOf(currentMedia)} — Season ${s}, Episode ${ep} (VidFast)`
+        : `${titleOf(currentMedia)} (VidFast Server)`;
     }
-    if (sourceZxcprimeBtn) sourceZxcprimeBtn.classList.add('active');
+    if (sourceVidfastBtn) sourceVidfastBtn.classList.add('active');
   } else if (source === 'vidnest') {
     playerIframe.src = getVidNestUrl(currentMedia.id, type, s, ep);
     if (playerTitle) {
@@ -513,7 +513,7 @@ function scrollToPlayer() {
 }
 
 function playEpisode(seasonNumber, episodeNumber) {
-  const targetSource = currentSource === 'trailer' ? 'vidsrc' : currentSource;
+  const targetSource = currentSource === 'trailer' ? 'zxcprime' : currentSource;
   updatePlayer(targetSource, seasonNumber, episodeNumber);
   scrollToPlayer();
   toast(`Playing Season ${seasonNumber}, Episode ${episodeNumber}`);
@@ -618,7 +618,7 @@ async function loadDetails() {
     const playerHtml = `
       <section class="preview content-section player-hidden" id="player-section">
         <div class="player-header">
-          <span class="player-title" id="player-title">${titleOf(item)} ${type === 'tv' ? `— Season ${currentSeason}, Episode ${currentEpisode}` : ''} (VidSrc Server)</span>
+          <span class="player-title" id="player-title">${titleOf(item)} ${type === 'tv' ? `— Season ${currentSeason}, Episode ${currentEpisode}` : ''} (ZxcPrime Server)</span>
           <div class="player-controls-right">
             <span class="player-status-badge">Stream Player</span>
             <button type="button" class="player-close-btn" onclick="closePlayer()" title="Close player">✕ Close</button>
@@ -632,11 +632,11 @@ async function loadDetails() {
           <aside class="source-panel source-panel-hidden">
             <span class="fact-label">Video Sources</span>
             <div class="source-options">
-              <button class="source-option active" id="source-vidsrc" type="button" onclick="updatePlayer('vidsrc'); scrollToPlayer();">
-                <span> VidSrc</span>
+              <button class="source-option active" id="source-zxcprime" type="button" onclick="updatePlayer('zxcprime'); scrollToPlayer();">
+                <span> ZxcPrime</span>
               </button>
-              <button class="source-option" id="source-vidfast" type="button" onclick="updatePlayer('vidfast'); scrollToPlayer();">
-                <span> VidFast</span>
+              <button class="source-option" id="source-vidsrc" type="button" onclick="updatePlayer('vidsrc'); scrollToPlayer();">
+                <span> VidSrc</span>
               </button>
               <button class="source-option" id="source-vidup" type="button" onclick="updatePlayer('vidup'); scrollToPlayer();">
                 <span> VidUp</span>
@@ -644,8 +644,8 @@ async function loadDetails() {
               <button class="source-option" id="source-vidrock" type="button" onclick="updatePlayer('vidrock'); scrollToPlayer();">
                 <span> VidRock</span>
               </button>
-              <button class="source-option" id="source-zxcprime" type="button" onclick="updatePlayer('zxcprime'); scrollToPlayer();">
-                <span> ZxcPrime</span>
+              <button class="source-option" id="source-vidfast" type="button" onclick="updatePlayer('vidfast'); scrollToPlayer();">
+                <span> VidFast</span>
               </button>
               <button class="source-option" id="source-vidnest" type="button" onclick="updatePlayer('vidnest'); scrollToPlayer();">
                 <span> VidNest</span>
@@ -698,12 +698,12 @@ async function loadDetails() {
             // Watch now always plays from S1E1 for TV; Resume restores exact position.
             return hasSaved
               ? `<div class="watch-actions">
-                   <button class="button primary" onclick="updatePlayer('vidsrc', ${resumeSeason}, ${resumeEpisode}); scrollToPlayer();">${resumeLabel}</button>
+                   <button class="button primary" onclick="updatePlayer('zxcprime', ${resumeSeason}, ${resumeEpisode}); scrollToPlayer();">${resumeLabel}</button>
                    <button class="button secondary" onclick="clearMediaProgress('${item.id}'); location.reload();" title="Start over"><img src="assets/Logos/play-button.png" alt="Play" class="btn-play-icon"> Watch from start</button>
                    ${downloadBtn}
                  </div>`
               : `<div class="watch-actions">
-                   <button class="button primary" onclick="updatePlayer('vidsrc', 1, 1); scrollToPlayer();"><img src="assets/Logos/play-button.png" alt="Play" class="btn-play-icon"> Watch now</button>
+                   <button class="button primary" onclick="updatePlayer('zxcprime', 1, 1); scrollToPlayer();"><img src="assets/Logos/play-button.png" alt="Play" class="btn-play-icon"> Watch now</button>
                    ${downloadBtn}
                  </div>`;
           })()}

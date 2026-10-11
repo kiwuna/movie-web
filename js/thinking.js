@@ -174,7 +174,7 @@
   function initThinkingFeature() {
     createThinkingModal();
     attachGlobalTriggers();
-    renderHeroBanner();
+    console.log('Thinking feature initialized');
   }
 
   // Create the modal DOM markup and append to body
@@ -232,8 +232,12 @@
 
   // Open modal and reset to first question or continue
   function openThinkingModal() {
+    console.log('openThinkingModal called');
     const modal = document.querySelector('#wai-modal');
-    if (!modal) return;
+    if (!modal) {
+      console.error('Modal not found');
+      return;
+    }
 
     modal.classList.add('open');
     document.body.style.overflow = 'hidden';
@@ -286,29 +290,7 @@
     });
   }
 
-  // Render a banner on home page / catalog if appropriate
-  function renderHeroBanner() {
-    // Check if we are on index.html
-    const isHome = location.pathname.endsWith('index.html') || location.pathname.endsWith('/') || location.pathname === '';
-    const trendingSection = document.querySelector('#trending')?.closest('.content-section');
-    if (isHome && trendingSection && !document.querySelector('.wai-hero-banner')) {
-      const banner = document.createElement('div');
-      banner.className = 'wai-hero-banner';
-      banner.innerHTML = `
-        <div class="wai-banner-content">
-          <div class="wai-banner-eyebrow">
-            Interactive Movie Finder
-          </div>
-          <h2 class="wai-banner-title">What are you thinking?</h2>
-          <p class="wai-banner-desc">Not sure what to watch? Tell Zanora your mood, vibe, and chaotic energy in 11 quick questions — we'll choose the movie that fits.</p>
-        </div>
-        <button class="wai-banner-btn" data-action="open-wai">
-          Start The Quiz →
-        </button>
-      `;
-      trendingSection.parentNode.insertBefore(banner, trendingSection);
-    }
-  }
+
 
   // Render current question step
   function renderStep() {
@@ -508,10 +490,13 @@
     }
 
     // 0.5 Animation filter
+    let withGenres = [];
+    let withoutGenres = [];
+
     if (animation === 'animated') {
-      params.with_genres = GENRE_MAP.Animation;
+      withGenres.push(GENRE_MAP.Animation);
     } else if (animation === 'live_action') {
-      params.without_genres = GENRE_MAP.Animation;
+      withoutGenres.push(GENRE_MAP.Animation);
     }
 
     // Runtime filter (only applies to movies)
@@ -541,20 +526,26 @@
     }
 
     // 3. Primary Genre Hints for pool discovery
-    // We add soft primary genre filters so TMDB returns a very relevant pool,
-    // without over-constraining to avoid 0 results.
+    // We add primary genre filters so TMDB returns a strictly relevant pool.
     let poolGenre = null;
-    if (feel === 'laugh') poolGenre = GENRE_MAP.Comedy;
+    if (feel === 'scared') poolGenre = GENRE_MAP.Horror;
+    else if (feel === 'laugh') poolGenre = GENRE_MAP.Comedy;
     else if (feel === 'fall_in_love' || romance === 'whole_thing') poolGenre = GENRE_MAP.Romance;
-    else if (feel === 'scared') poolGenre = GENRE_MAP.Horror;
     else if (feel === 'badass') poolGenre = GENRE_MAP.Action;
     else if (feel === 'stressed') poolGenre = GENRE_MAP.Thriller;
     else if (feel === 'think') poolGenre = `${GENRE_MAP.Mystery},${GENRE_MAP.SciFi}`;
     else if (feel === 'feel_something' || seriousness === 'destroy_me') poolGenre = GENRE_MAP.Drama;
-    else if (feel === 'warm') poolGenre = `${GENRE_MAP.Comedy},${GENRE_MAP.Animation},${GENRE_MAP.Family}`;
+    else if (feel === 'warm') poolGenre = `${GENRE_MAP.Comedy},${GENRE_MAP.Family}`;
 
     if (poolGenre) {
-      params.with_genres = poolGenre;
+      withGenres.push(poolGenre);
+    }
+
+    if (withGenres.length > 0) {
+      params.with_genres = withGenres.join(',');
+    }
+    if (withoutGenres.length > 0) {
+      params.without_genres = withoutGenres.join(',');
     }
 
     // 4. Popularity parameters
@@ -578,10 +569,13 @@
       candidates = candidates.concat(res1.results || []);
 
       if (candidates.length < 10) {
-        // Fallback without strict runtime if pool is too tight
-        delete params['with_runtime.lte'];
-        delete params['with_runtime.gte'];
-        const fallbackRes = await discoverMovies({ ...params, page: 1 });
+        // Fallback: relax runtime and strict vote thresholds while KEEPING genre intact
+        const relaxedParams = { ...params };
+        delete relaxedParams['with_runtime.lte'];
+        delete relaxedParams['with_runtime.gte'];
+        relaxedParams['vote_count.gte'] = '20';
+        relaxedParams['vote_average.gte'] = '5.0';
+        const fallbackRes = await discoverMovies({ ...relaxedParams, page: 1 });
         candidates = candidates.concat(fallbackRes.results || []);
       }
 
@@ -591,7 +585,10 @@
       }
     } catch (e) {
       console.warn('First discover attempt failed, retrying with broader params:', e);
-      const fallback = await discoverMovies({ sort_by: 'popularity.desc', page: 1 });
+      // Keep genre in fallback so we never return a completely unrelated genre
+      const fallbackParams = { sort_by: 'popularity.desc', page: 1 };
+      if (params.with_genres) fallbackParams.with_genres = params.with_genres;
+      const fallback = await discoverMovies(fallbackParams);
       candidates = fallback.results || [];
     }
 
@@ -665,16 +662,16 @@
       params['first_air_date.gte'] = '1970-01-01';
     }
 
-    // Genre hints based on mood
+    // Genre hints based on mood (note: TMDB TV doesn't have Horror genre 27; uses Mystery 9648 / Crime 80 / Drama 18)
     let poolGenre = null;
-    if (feel === 'laugh') poolGenre = GENRE_MAP.Comedy;
+    if (feel === 'scared') poolGenre = `${GENRE_MAP.Mystery},${GENRE_MAP.Crime}`;
+    else if (feel === 'laugh') poolGenre = GENRE_MAP.Comedy;
     else if (feel === 'fall_in_love' || romance === 'whole_thing') poolGenre = GENRE_MAP.Romance;
-    else if (feel === 'scared') poolGenre = GENRE_MAP.Horror;
     else if (feel === 'badass') poolGenre = GENRE_MAP.Action;
-    else if (feel === 'stressed') poolGenre = GENRE_MAP.Thriller;
+    else if (feel === 'stressed') poolGenre = `${GENRE_MAP.Mystery},${GENRE_MAP.Crime}`;
     else if (feel === 'think') poolGenre = `${GENRE_MAP.Mystery},${GENRE_MAP.SciFi}`;
     else if (feel === 'feel_something' || seriousness === 'destroy_me') poolGenre = GENRE_MAP.Drama;
-    else if (feel === 'warm') poolGenre = `${GENRE_MAP.Comedy},${GENRE_MAP.Animation},${GENRE_MAP.Family}`;
+    else if (feel === 'warm') poolGenre = `${GENRE_MAP.Comedy},${GENRE_MAP.Family}`;
 
     if (poolGenre) {
       params.with_genres = poolGenre;
@@ -700,8 +697,11 @@
       candidates = candidates.concat(res1.results || []);
 
       if (candidates.length < 10) {
-        const fallback = await discoverTV({ sort_by: 'popularity.desc', page: 1 });
-        candidates = candidates.concat(fallback.results || []);
+        const relaxedParams = { ...params };
+        relaxedParams['vote_count.gte'] = '20';
+        relaxedParams['vote_average.gte'] = '5.0';
+        const fallbackRes = await discoverTV({ ...relaxedParams, page: 1 });
+        candidates = candidates.concat(fallbackRes.results || []);
       }
 
       if (candidates.length >= 10 && (popularity === 'surprise' || popularity === 'popular_subtle')) {
@@ -710,7 +710,9 @@
       }
     } catch (e) {
       console.warn('TV discover failed, retrying:', e);
-      const fallback = await discoverTV({ sort_by: 'popularity.desc', page: 1 });
+      const fallbackParams = { sort_by: 'popularity.desc', page: 1 };
+      if (params.with_genres) fallbackParams.with_genres = params.with_genres;
+      const fallback = await discoverTV(fallbackParams);
       candidates = fallback.results || [];
     }
 
@@ -762,45 +764,46 @@
     // Quality bonus
     score += (voteAvg - 6.0) * 8;
 
-    // 1. FEEL MATCHING
+    // 1. FEEL MATCHING (Dominant weight so the primary mood is always respected)
     switch (answers.feel) {
       case 'laugh':
-        if (genres.includes(GENRE_MAP.Comedy)) score += 35;
-        if (genres.includes(GENRE_MAP.Animation)) score += 12;
-        if (genres.includes(GENRE_MAP.Horror)) score -= 20;
+        if (genres.includes(GENRE_MAP.Comedy)) score += 60;
+        if (genres.includes(GENRE_MAP.Animation)) score += 15;
+        if (genres.includes(GENRE_MAP.Horror)) score -= 40;
         break;
       case 'feel_something':
-        if (genres.includes(GENRE_MAP.Drama)) score += 30;
-        if (overview.includes('loss') || overview.includes('family') || overview.includes('life')) score += 12;
+        if (genres.includes(GENRE_MAP.Drama)) score += 60;
+        if (overview.includes('loss') || overview.includes('family') || overview.includes('life')) score += 15;
         break;
       case 'fall_in_love':
-        if (genres.includes(GENRE_MAP.Romance)) score += 40;
-        if (genres.includes(GENRE_MAP.Comedy)) score += 10;
-        if (genres.includes(GENRE_MAP.War)) score -= 20;
+        if (genres.includes(GENRE_MAP.Romance)) score += 70;
+        if (genres.includes(GENRE_MAP.Comedy)) score += 15;
+        if (genres.includes(GENRE_MAP.War)) score -= 30;
         break;
       case 'stressed':
-        if (genres.includes(GENRE_MAP.Thriller)) score += 35;
-        if (genres.includes(GENRE_MAP.Crime) || genres.includes(GENRE_MAP.Mystery)) score += 15;
+        if (genres.includes(GENRE_MAP.Thriller)) score += 65;
+        if (genres.includes(GENRE_MAP.Crime) || genres.includes(GENRE_MAP.Mystery)) score += 20;
         break;
       case 'think':
-        if (genres.includes(GENRE_MAP.Mystery)) score += 25;
-        if (genres.includes(GENRE_MAP.SciFi)) score += 25;
-        if (overview.includes('secret') || overview.includes('truth') || overview.includes('discover')) score += 10;
+        if (genres.includes(GENRE_MAP.Mystery)) score += 40;
+        if (genres.includes(GENRE_MAP.SciFi)) score += 40;
+        if (overview.includes('secret') || overview.includes('truth') || overview.includes('discover')) score += 15;
         break;
       case 'badass':
-        if (genres.includes(GENRE_MAP.Action)) score += 35;
-        if (genres.includes(GENRE_MAP.Adventure)) score += 15;
-        if (genres.includes(GENRE_MAP.Drama) && !genres.includes(GENRE_MAP.Action)) score -= 10;
+        if (genres.includes(GENRE_MAP.Action)) score += 65;
+        if (genres.includes(GENRE_MAP.Adventure)) score += 20;
+        if (genres.includes(GENRE_MAP.Drama) && !genres.includes(GENRE_MAP.Action)) score -= 15;
         break;
       case 'scared':
-        if (genres.includes(GENRE_MAP.Horror)) score += 40;
-        if (genres.includes(GENRE_MAP.Thriller)) score += 15;
-        if (genres.includes(GENRE_MAP.Comedy)) score -= 15;
+        // Strong positive weight for Horror (or Mystery/Thriller in TV)
+        if (genres.includes(GENRE_MAP.Horror)) score += 80;
+        if (genres.includes(GENRE_MAP.Thriller) || genres.includes(GENRE_MAP.Mystery)) score += 30;
+        if (genres.includes(GENRE_MAP.Comedy)) score -= 30;
         break;
       case 'warm':
-        if (genres.includes(GENRE_MAP.Family) || genres.includes(GENRE_MAP.Animation)) score += 30;
-        if (genres.includes(GENRE_MAP.Comedy)) score += 15;
-        if (genres.includes(GENRE_MAP.Horror) || genres.includes(GENRE_MAP.War)) score -= 35;
+        if (genres.includes(GENRE_MAP.Family) || genres.includes(GENRE_MAP.Animation)) score += 50;
+        if (genres.includes(GENRE_MAP.Comedy)) score += 20;
+        if (genres.includes(GENRE_MAP.Horror) || genres.includes(GENRE_MAP.War)) score -= 50;
         break;
     }
 
@@ -815,7 +818,7 @@
         break;
       case 'chill':
         if (genres.includes(GENRE_MAP.Comedy) || genres.includes(GENRE_MAP.Documentary) || genres.includes(GENRE_MAP.Animation)) score += 18;
-        if (genres.includes(GENRE_MAP.Horror)) score -= 25;
+        if (genres.includes(GENRE_MAP.Horror) && answers.feel !== 'scared') score -= 25;
         break;
     }
 
@@ -854,7 +857,7 @@
     switch (answers.chaos) {
       case 'peaceful':
         if (genres.includes(GENRE_MAP.Family) || genres.includes(GENRE_MAP.Documentary) || genres.includes(GENRE_MAP.Animation)) score += 20;
-        if (genres.includes(GENRE_MAP.Action) || genres.includes(GENRE_MAP.Horror)) score -= 30;
+        if ((genres.includes(GENRE_MAP.Action) || genres.includes(GENRE_MAP.Horror)) && answers.feel !== 'scared') score -= 30;
         break;
       case 'messy':
         if (genres.includes(GENRE_MAP.Comedy) || genres.includes(GENRE_MAP.Crime)) score += 18;

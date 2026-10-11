@@ -14,7 +14,7 @@ if (fs.existsSync(envFile)) {
 }
 
 const types = { '.html': 'text/html; charset=utf-8', '.js': 'application/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml' };
-const allowedEndpoints = [/^trending\/movie\/(day|week)$/, /^movie\/(popular|now_playing|upcoming)$/, /^tv\/popular$/, /^genre\/(movie|tv)\/list$/, /^discover\/(movie|tv)$/, /^search\/(movie|tv|multi)$/, /^movie\/\d+$/, /^tv\/\d+$/, /^tv\/\d+\/season\/\d+$/];
+const allowedEndpoints = [/^trending\/movie\/(day|week)$/, /^movie\/(popular|now_playing|upcoming|top_rated)$/, /^tv\/popular$/, /^genre\/(movie|tv)\/list$/, /^discover\/(movie|tv)$/, /^search\/(movie|tv|multi)$/, /^movie\/\d+$/, /^tv\/\d+$/, /^tv\/\d+\/season\/\d+$/];
 
 const server = http.createServer(async (request, response) => {
   const url = new URL(request.url, 'http://localhost:3000');
