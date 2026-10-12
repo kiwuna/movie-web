@@ -1,0 +1,13 @@
+{
+  "rewrites": [
+    { "source": "/home", "destination": "/index.html" },
+    { "source": "/movies", "destination": "/movies.html" },
+    { "source": "/tv", "destination": "/tv.html" },
+    { "source": "/search", "destination": "/search.html" },
+    { "source": "/history", "destination": "/history.html" },
+    { "source": "/clips", "destination": "/clips.html" },
+    { "source": "/details", "destination": "/details.html" },
+    { "source": "/watch", "destination": "/watch.html" },
+    { "source": "/fhorts", "destination": "/fhorts.html" }
+  ]
+}
