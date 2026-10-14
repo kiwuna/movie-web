@@ -4,9 +4,10 @@ const params = new URLSearchParams(location.search),
   root = document.querySelector('#details');
 
 let currentMedia = null;
-let currentSource = 'zxcprime'; // 'zxcprime' | 'vidsrc' | 'vidapi' | 'trailer'
+let currentSource = 'vidup'; // 'vidup' | 'vidsrc' | 'zxcprime' | 'vidapi' | 'trailer'
 let currentSeason = 1;
 let currentEpisode = 1;
+let playerLoadedAt = 0; // Timestamp when player episode was loaded, prevents stale iframe events
 let lastKnownProgress = null; // { key, value } — updated on every PLAYER_EVENT
 let pipWindow = null; // Document Picture-in-Picture window
 let mainPlayerSrcBeforePiP = null; // Store main player URL before PiP
@@ -175,6 +176,7 @@ function updatePlayer(source, s = currentSeason, ep = currentEpisode) {
   currentSource = source;
   currentSeason = s;
   currentEpisode = ep;
+  playerLoadedAt = Date.now();
 
   if (currentMedia && type === 'tv') {
     saveTVState(currentMedia.id, s, ep);
@@ -230,14 +232,14 @@ function updatePlayer(source, s = currentSeason, ep = currentEpisode) {
   if (sourceVidapiBtn) sourceVidapiBtn.classList.remove('active');
   if (sourceTrailerBtn) sourceTrailerBtn.classList.remove('active');
 
-  if (source === 'zxcprime') {
-    playerIframe.src = getZxcPrimeUrl(currentMedia.id, type, s, ep);
+  if (source === 'vidup') {
+    playerIframe.src = getVidUpUrl(currentMedia.id, type, s, ep);
     if (playerTitle) {
       playerTitle.textContent = type === 'tv'
-        ? `${titleOf(currentMedia)} — Season ${s}, Episode ${ep} (ZxcPrime)`
-        : `${titleOf(currentMedia)} (ZxcPrime Server)`;
+        ? `${titleOf(currentMedia)} — Season ${s}, Episode ${ep} (VidUp)`
+        : `${titleOf(currentMedia)} (VidUp Server)`;
     }
-    if (sourceZxcprimeBtn) sourceZxcprimeBtn.classList.add('active');
+    if (sourceVidupBtn) sourceVidupBtn.classList.add('active');
   } else if (source === 'vidsrc') {
     playerIframe.src = getVidSrcUrl(currentMedia.id, type, s, ep);
     if (playerTitle) {
@@ -246,14 +248,14 @@ function updatePlayer(source, s = currentSeason, ep = currentEpisode) {
         : `${titleOf(currentMedia)} (VidSrc Server)`;
     }
     if (sourceVidsrcBtn) sourceVidsrcBtn.classList.add('active');
-  } else if (source === 'vidup') {
-    playerIframe.src = getVidUpUrl(currentMedia.id, type, s, ep);
+  } else if (source === 'zxcprime') {
+    playerIframe.src = getZxcPrimeUrl(currentMedia.id, type, s, ep);
     if (playerTitle) {
       playerTitle.textContent = type === 'tv'
-        ? `${titleOf(currentMedia)} — Season ${s}, Episode ${ep} (VidUp)`
-        : `${titleOf(currentMedia)} (VidUp Server)`;
+        ? `${titleOf(currentMedia)} — Season ${s}, Episode ${ep} (ZxcPrime)`
+        : `${titleOf(currentMedia)} (ZxcPrime Server)`;
     }
-    if (sourceVidupBtn) sourceVidupBtn.classList.add('active');
+    if (sourceZxcprimeBtn) sourceZxcprimeBtn.classList.add('active');
   } else if (source === 'vidrock') {
     playerIframe.src = getVidRockUrl(currentMedia.id, type, s, ep);
     if (playerTitle) {
@@ -305,13 +307,23 @@ function updatePlayer(source, s = currentSeason, ep = currentEpisode) {
     if (!activeEpInDom && episodesList) {
       loadSeason(s);
     } else {
-      document.querySelectorAll('.episode-card').forEach(el => el.classList.remove('active'));
-      if (activeEpInDom) activeEpInDom.classList.add('active');
+      document.querySelectorAll('.episode-card').forEach(el => {
+        const isTarget = el.id === `ep-${s}-${ep}`;
+        el.classList.toggle('active', isTarget);
+        const playBtn = el.querySelector('.ep-play-btn');
+        if (playBtn) playBtn.textContent = isTarget ? 'Playing' : 'Play';
+      });
+      if (activeEpInDom) {
+        activeEpInDom.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
     }
   } else {
-    document.querySelectorAll('.episode-card').forEach(el => el.classList.remove('active'));
-    const activeEpEl = document.querySelector(`#ep-${s}-${ep}`);
-    if (activeEpEl) activeEpEl.classList.add('active');
+    document.querySelectorAll('.episode-card').forEach(el => {
+      const isTarget = el.id === `ep-${s}-${ep}`;
+      el.classList.toggle('active', isTarget);
+      const playBtn = el.querySelector('.ep-play-btn');
+      if (playBtn) playBtn.textContent = isTarget ? 'Playing' : 'Play';
+    });
   }
 }
 
@@ -513,45 +525,173 @@ function scrollToPlayer() {
 }
 
 function playEpisode(seasonNumber, episodeNumber) {
-  const targetSource = currentSource === 'trailer' ? 'zxcprime' : currentSource;
+  const targetSource = currentSource === 'trailer' ? 'vidup' : currentSource;
   updatePlayer(targetSource, seasonNumber, episodeNumber);
   scrollToPlayer();
   toast(`Playing Season ${seasonNumber}, Episode ${episodeNumber}`);
 }
 
-// VidSrc event listener for saving progress and auto-resume
-window.addEventListener('message', (event) => {
-  if (!event.data || event.data.type !== 'PLAYER_EVENT') return;
-  const { player_info, player_status, player_progress } = event.data.data || {};
-  if (!player_info) return;
+function playNextEpisode() {
+  if (!currentMedia || type !== 'tv') return;
 
-  const id = player_info.tmdb || player_info.imdb || (currentMedia && currentMedia.id);
+  const validSeasons = (currentMedia.seasons || []).filter(s => s.season_number > 0);
+  if (!validSeasons.length) {
+    toast('No episodes available');
+    return;
+  }
+
+  // Find current season data
+  const currentSeasonData = validSeasons.find(s => s.season_number === currentSeason);
+  if (!currentSeasonData) {
+    toast('Season not found');
+    return;
+  }
+
+  const totalEpisodes = currentSeasonData.episode_count || 0;
+  let nextSeason = currentSeason;
+  let nextEpisode = currentEpisode + 1;
+
+  // If at end of current season, move to next season
+  if (nextEpisode > totalEpisodes) {
+    const nextSeasonData = validSeasons.find(s => s.season_number === currentSeason + 1);
+    if (nextSeasonData) {
+      nextSeason = nextSeasonData.season_number;
+      nextEpisode = 1;
+    } else {
+      toast('You\'ve reached the end of the series');
+      return;
+    }
+  }
+
+  const targetSource = currentSource === 'trailer' ? 'vidup' : currentSource;
+  updatePlayer(targetSource, nextSeason, nextEpisode);
+  scrollToPlayer();
+  toast(`Playing Season ${nextSeason}, Episode ${nextEpisode}`);
+}
+
+// Update active episode card and UI state without reloading the iframe
+function syncActiveEpisode(s, ep) {
+  currentSeason = Number(s);
+  currentEpisode = Number(ep);
+
+  if (currentMedia && type === 'tv') {
+    saveTVState(currentMedia.id, currentSeason, currentEpisode);
+  }
+
+  // Update season dropdown if present
+  const dropdown = document.querySelector('#season-dropdown');
+  if (dropdown && dropdown.value != currentSeason) {
+    dropdown.value = currentSeason;
+  }
+
+  // Update season pills
+  document.querySelectorAll('.season-pill').forEach(btn => {
+    btn.classList.toggle('active', btn.textContent.trim() === `Season ${currentSeason}`);
+  });
+
+  // Update player header title
+  const playerTitle = document.querySelector('#player-title');
+  if (playerTitle && currentMedia) {
+    const serverName = currentSource === 'vidup' ? 'VidUp'
+      : currentSource === 'vidsrc' ? 'VidSrc'
+      : currentSource === 'vidfast' ? 'VidFast'
+      : currentSource === 'zxcprime' ? 'ZxcPrime'
+      : currentSource === 'vidrock' ? 'VidRock'
+      : currentSource === 'vidnest' ? 'VidNest'
+      : currentSource === 'vidapi' ? 'VidApi'
+      : 'VidUp';
+    playerTitle.textContent = `${titleOf(currentMedia)} — Season ${currentSeason}, Episode ${currentEpisode} (${serverName} Server)`;
+  }
+
+  // Check if target episode card exists in currently rendered season
+  const activeEpInDom = document.querySelector(`#ep-${currentSeason}-${currentEpisode}`);
+  const episodesList = document.querySelector('#episodes-list');
+  if (!activeEpInDom && episodesList) {
+    loadSeason(currentSeason);
+  } else {
+    document.querySelectorAll('.episode-card').forEach(el => {
+      const isTarget = el.id === `ep-${currentSeason}-${currentEpisode}`;
+      el.classList.toggle('active', isTarget);
+      const playBtn = el.querySelector('.ep-play-btn');
+      if (playBtn) playBtn.textContent = isTarget ? 'Playing' : 'Play';
+    });
+    if (activeEpInDom) {
+      activeEpInDom.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
+}
+
+// Window message listener for player events, saving progress, and auto episode changes
+window.addEventListener('message', (event) => {
+  let eventData = event.data;
+  if (typeof eventData === 'string') {
+    try {
+      eventData = JSON.parse(eventData);
+    } catch (e) {
+      return;
+    }
+  }
+  if (!eventData) return;
+
+  // VidSrc / standard embed format: { type: 'PLAYER_EVENT', data: { player_info, player_status, player_progress } }
+  // Other players may send: { event, type, season, episode, currentTime, ... }
+  let player_info = eventData.data?.player_info || eventData.player_info;
+  let player_status = eventData.data?.player_status || eventData.player_status || eventData.event || eventData.status;
+  let player_progress = eventData.data?.player_progress ?? eventData.player_progress ?? eventData.currentTime ?? eventData.time;
+
+  // Extract season & episode from any standard location
+  let eventSeason = player_info?.season ?? eventData.data?.season ?? eventData.season;
+  let eventEpisode = player_info?.episode ?? eventData.data?.episode ?? eventData.episode;
+
+  if (eventSeason !== undefined && eventSeason !== null) eventSeason = parseInt(eventSeason, 10);
+  if (eventEpisode !== undefined && eventEpisode !== null) eventEpisode = parseInt(eventEpisode, 10);
+
+  const isTv = (player_info?.mediaType === 'tv') || (eventData.mediaType === 'tv') || type === 'tv';
+  const id = player_info?.tmdb || player_info?.imdb || eventData.tmdb || eventData.imdb || (currentMedia && currentMedia.id);
+  // Verify message belongs to current media item
+  if (currentMedia && id && String(id) !== String(currentMedia.id)) return;
+
+  // If the player auto-switched to a new episode (e.g. via internal autonext), sync the UI and active episode card.
+  if (isTv && typeof eventEpisode === 'number' && !isNaN(eventEpisode) && eventEpisode > 0) {
+    const s = (typeof eventSeason === 'number' && !isNaN(eventSeason) && eventSeason > 0) ? eventSeason : currentSeason;
+    
+    if (eventEpisode !== currentEpisode || s !== currentSeason) {
+      // During initial player load (first 1.5s), don't jump more than 1 episode away from currentEpisode
+      // (this prevents a stale/cached preloader index like ep 6 from briefly flashing when you clicked ep 4)
+      const isInitialBurst = (Date.now() - playerLoadedAt) < 1500;
+      const isExtremeJump = Math.abs(eventEpisode - currentEpisode) > 1 && s === currentSeason;
+
+      if (!isInitialBurst || !isExtremeJump) {
+        playerLoadedAt = 0; // Clear load window once genuine transition is accepted
+        syncActiveEpisode(s, eventEpisode);
+      }
+    }
+  }
+
   if (!id) return;
 
-  if (player_status === 'playing' || player_status === 'paused') {
-    const isTv = player_info.mediaType === 'tv' || type === 'tv';
-    const s = player_info.season || currentSeason;
-    const ep = player_info.episode || currentEpisode;
+  if (player_status === 'playing' || player_status === 'paused' || player_status === 'timeupdate') {
+    const s = eventSeason || currentSeason;
+    const ep = eventEpisode || currentEpisode;
     const key = isTv && s && ep
       ? `progress_${id}_s${s}_e${ep}`
       : `progress_${id}`;
-    if (player_progress > 5) {
+    if (typeof player_progress === 'number' && player_progress > 5) {
       saveProgress(key, player_progress);
       saveProgress(`progress_${id}`, player_progress);
       if (isTv) {
         saveTVState(id, s, ep);
       }
-      // Track latest so we can flush on unload even if the tab closes abruptly
       lastKnownProgress = { key, value: player_progress };
     }
   }
 
-  // Auto-next episode handling when completed
-  if (player_status === 'completed' && player_info.mediaType === 'tv') {
-    const nextEp = parseInt(player_info.episode || currentEpisode) + 1;
-    const season = parseInt(player_info.season || currentSeason);
+  // Auto-next episode handling when player completes and signals 'completed' / 'ended'
+  if ((player_status === 'completed' || player_status === 'ended') && isTv) {
+    const nextEp = (eventEpisode || currentEpisode) + 1;
+    const season = eventSeason || currentSeason;
     toast(`Episode completed. Up next: Episode ${nextEp}`);
-    updatePlayer('vidsrc', season, nextEp);
+    updatePlayer(currentSource || 'vidsrc', season, nextEp);
   }
 });
 
@@ -618,7 +758,7 @@ async function loadDetails() {
     const playerHtml = `
       <section class="preview content-section player-hidden" id="player-section">
         <div class="player-header">
-          <span class="player-title" id="player-title">${titleOf(item)} ${type === 'tv' ? `— Season ${currentSeason}, Episode ${currentEpisode}` : ''} (ZxcPrime Server)</span>
+          <span class="player-title" id="player-title">${titleOf(item)} ${type === 'tv' ? `— Season ${currentSeason}, Episode ${currentEpisode}` : ''} (VidUp Server)</span>
           <div class="player-controls-right">
             <span class="player-status-badge">Stream Player</span>
             <button type="button" class="player-close-btn" onclick="closePlayer()" title="Close player">✕ Close</button>
@@ -632,14 +772,14 @@ async function loadDetails() {
           <aside class="source-panel source-panel-hidden">
             <span class="fact-label">Video Sources</span>
             <div class="source-options">
-              <button class="source-option active" id="source-zxcprime" type="button" onclick="updatePlayer('zxcprime'); scrollToPlayer();">
-                <span> ZxcPrime</span>
+              <button class="source-option active" id="source-vidup" type="button" onclick="updatePlayer('vidup'); scrollToPlayer();">
+                <span> VidUp</span>
               </button>
               <button class="source-option" id="source-vidsrc" type="button" onclick="updatePlayer('vidsrc'); scrollToPlayer();">
                 <span> VidSrc</span>
               </button>
-              <button class="source-option" id="source-vidup" type="button" onclick="updatePlayer('vidup'); scrollToPlayer();">
-                <span> VidUp</span>
+              <button class="source-option" id="source-zxcprime" type="button" onclick="updatePlayer('zxcprime'); scrollToPlayer();">
+                <span> ZxcPrime</span>
               </button>
               <button class="source-option" id="source-vidrock" type="button" onclick="updatePlayer('vidrock'); scrollToPlayer();">
                 <span> VidRock</span>
@@ -662,6 +802,15 @@ async function loadDetails() {
                 <img src="assets/PIP.svg" alt="Picture in Picture" class="pip-icon">
                 <span> Picture in Picture</span>
               </button>
+              ${type === 'tv' ? `
+                <button class="source-option next-ep-option" id="next-ep-btn" type="button" onclick="playNextEpisode()">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="5 4 15 12 5 20 5 4"></polygon>
+                    <line x1="19" y1="5" x2="19" y2="19"></line>
+                  </svg>
+                  <span> Next Episode</span>
+                </button>
+              ` : ''}
             </div>
           </aside>
         </div>
@@ -698,12 +847,12 @@ async function loadDetails() {
             // Watch now always plays from S1E1 for TV; Resume restores exact position.
             return hasSaved
               ? `<div class="watch-actions">
-                   <button class="button primary" onclick="updatePlayer('zxcprime', ${resumeSeason}, ${resumeEpisode}); scrollToPlayer();">${resumeLabel}</button>
+                   <button class="button primary" onclick="updatePlayer('vidup', ${resumeSeason}, ${resumeEpisode}); scrollToPlayer();">${resumeLabel}</button>
                    <button class="button secondary" onclick="clearMediaProgress('${item.id}'); location.reload();" title="Start over"><img src="assets/Logos/play-button.png" alt="Play" class="btn-play-icon"> Watch from start</button>
                    ${downloadBtn}
                  </div>`
               : `<div class="watch-actions">
-                   <button class="button primary" onclick="updatePlayer('zxcprime', 1, 1); scrollToPlayer();"><img src="assets/Logos/play-button.png" alt="Play" class="btn-play-icon"> Watch now</button>
+                   <button class="button primary" onclick="updatePlayer('vidup', 1, 1); scrollToPlayer();"><img src="assets/Logos/play-button.png" alt="Play" class="btn-play-icon"> Watch now</button>
                    ${downloadBtn}
                  </div>`;
           })()}

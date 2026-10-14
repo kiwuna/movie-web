@@ -21,6 +21,10 @@
 .source-option.pip-option svg,.source-option.pip-option .pip-icon{flex-shrink:0;width:20px;height:20px}
 .source-option.pip-option span{flex:1}
 .source-option.pip-option.active{border-color:rgba(185,232,234,.4);background:rgba(185,232,234,.08);color:var(--text);font-weight:600}
+.source-option.next-ep-option{gap:8px;justify-content:flex-start;margin-top:8px}
+.source-option.next-ep-option svg{flex-shrink:0;width:20px;height:20px}
+.source-option.next-ep-option span{flex:1}
+.source-option.next-ep-option:hover{background:rgba(185,232,234,.15);border-color:rgba(185,232,234,.5);color:var(--accent)}
 .source-panel p{margin:12px 0 0;color:var(--muted);font-size:12px;line-height:1.55}
 
 /* Seasons & Episode Sidebar on left side of Player */
