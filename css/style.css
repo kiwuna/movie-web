@@ -361,6 +361,48 @@ select {
 .modal-body {
   padding: 20px;
 }
+.modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 20px;
+}
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+}
+.checkbox-label input[type="checkbox"] {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+}
+.adblock-notice {
+  display: block;
+  margin-top: 20px;
+  font-size: 13px;
+  color: #676b75;
+  font-weight: 500;
+}
+.adblock-notice-banner {
+  position: fixed;
+  top: 70px;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--text);
+  text-align: center;
+  padding: 10px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--line);
+  z-index: 1000;
+}
 .filter-group {
   margin-bottom: 16px;
 }
@@ -966,7 +1008,7 @@ footer {
   letter-spacing: 0.14em;
   text-align: center;
 }
-footer span {
+footer span:not(.adblock-notice) {
   color: var(--accent);
   padding: 0 6px;
 }
