@@ -64,6 +64,17 @@ select {
 .nav-search {
   display: none;
 }
+.nav-settings {
+  color: var(--muted);
+  transition: color 0.2s;
+  margin-left: -200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.nav-settings:hover {
+  color: var(--text);
+}
 .nav-link-mobile {
   display: none;
 }
@@ -1020,6 +1031,67 @@ footer span:not(.adblock-notice) {
 .catalog-page {
   padding: 67px clamp(20px, 8vw, 130px);
   min-height: calc(100vh - 180px);
+}
+.settings-section {
+  margin-top: 40px;
+  padding: 24px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.settings-section h2 {
+  font-family: var(--serif);
+  font-size: 24px;
+  margin: 0 0 20px;
+  color: var(--text);
+}
+.setting-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+.setting-item:last-child {
+  border-bottom: none;
+}
+.setting-item label {
+  font-size: 14px;
+  color: var(--text);
+}
+.setting-item select {
+  width: 200px;
+}
+.setting-item input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+.setting-info {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 8px 0;
+}
+.danger-zone {
+  border-color: rgba(255, 82, 82, 0.3);
+}
+.danger-zone h2 {
+  color: #ff5252;
+}
+.setting-item button.danger {
+  background: rgba(255, 82, 82, 0.1);
+  color: #ff5252;
+  border-color: rgba(255, 82, 82, 0.3);
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+.setting-item button.danger:hover {
+  background: rgba(255, 82, 82, 0.2);
+  border-color: #ff5252;
 }
 .catalog-page h1 {
   font-size: clamp(40px, 5vw, 64px);

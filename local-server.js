@@ -41,7 +41,8 @@ const server = http.createServer(async (request, response) => {
     '/clips': 'clips.html',
     '/details': 'details.html',
     '/watch': 'watch.html',
-    '/fhorts': 'fhorts.html'
+    '/fhorts': 'fhorts.html',
+    '/settings': 'settings.html'
   };
 
   let requested = url.pathname;
