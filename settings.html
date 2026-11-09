@@ -23,7 +23,7 @@
       <div class="settings-section">
         <h2>Appearance</h2>
         <div class="setting-item">
-          <label>Accent Color</label>
+          <label>Accent Color (comming soon)</label>
           <select class="filter-select">
             <option value="#B9E8EA">Light Blue</option>
             <option value="#FF6B6B">Red</option>
@@ -41,7 +41,23 @@
         <h2>Home Page</h2>
         <div class="setting-item">
           <label>Show History on Home Page</label>
-          <input type="checkbox" checked />
+          <input type="checkbox" id="showHistoryOnHome" checked />
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h2>Playback</h2>
+        <div class="setting-item">
+          <label>Default Player</label>
+          <select class="filter-select" id="defaultPlayer">
+            <option value="vidsrc">VidSrc</option>
+            <option value="vidrock">VidRock</option>
+            <option value="vidup">VidUp</option>
+            <option value="zxcprime">ZxcPrime</option>
+            <option value="vidfast">VidFast</option>
+            <option value="vidnest">VidNest</option>
+            <option value="vidapi">VidApi</option>
+          </select>
         </div>
       </div>
 
@@ -49,11 +65,11 @@
         <h2>Navigation Bar Customization</h2>
         <div class="setting-item">
           <label>Disable Clips</label>
-          <input type="checkbox" />
+          <input type="checkbox" id="disableClips" />
         </div>
         <div class="setting-item">
           <label>Use Core Icon</label>
-          <input type="checkbox" />
+          <input type="checkbox" id="useCoreIcon" />
         </div>
       </div>
 
@@ -62,7 +78,7 @@
         <h2>Notifications</h2>
         <div class="setting-item">
           <label>Show Ad Blocker Notice</label>
-          <input type="checkbox" checked />
+          <input type="checkbox" id="showAdblockNotice" checked />
         </div>
       </div>
 
@@ -74,8 +90,12 @@
       <div class="settings-section danger-zone">
         <h2>Danger Zone</h2>
         <div class="setting-item">
-          <label>Delete User Data</label>
-          <button class="button danger">Delete</button>
+          <label>Delete Only User Data</label>
+          <button class="button danger" id="deleteUserData">Delete</button>
+        </div>
+        <div class="setting-item">
+          <label>Delete Everything</label>
+          <button class="button danger" id="deleteAllData">Delete</button>
         </div>
       </div>
     </main>
@@ -86,5 +106,96 @@
     <div class="toast" id="toast"></div>
     <script src="js/api.js"></script>
     <script src="js/app.js"></script>
+    <script>
+      // Load saved settings
+      const useCoreIconCheckbox = document.getElementById('useCoreIcon');
+      if (useCoreIconCheckbox) {
+        useCoreIconCheckbox.checked = localStorage.getItem('useCoreIcon') === 'true';
+        
+        // Save on change
+        useCoreIconCheckbox.addEventListener('change', (e) => {
+          localStorage.setItem('useCoreIcon', e.target.checked);
+          // Reload page to apply changes
+          setTimeout(() => location.reload(), 100);
+        });
+      }
+
+      const disableClipsCheckbox = document.getElementById('disableClips');
+      if (disableClipsCheckbox) {
+        disableClipsCheckbox.checked = localStorage.getItem('disableClips') === 'true';
+        
+        // Save on change
+        disableClipsCheckbox.addEventListener('change', (e) => {
+          localStorage.setItem('disableClips', e.target.checked);
+          // Reload page to apply changes
+          setTimeout(() => location.reload(), 100);
+        });
+      }
+
+      const showHistoryOnHomeCheckbox = document.getElementById('showHistoryOnHome');
+      if (showHistoryOnHomeCheckbox) {
+        showHistoryOnHomeCheckbox.checked = localStorage.getItem('showHistoryOnHome') !== 'false';
+
+        // Save on change
+        showHistoryOnHomeCheckbox.addEventListener('change', (e) => {
+          localStorage.setItem('showHistoryOnHome', e.target.checked);
+        });
+      }
+
+      const defaultPlayerSelect = document.getElementById('defaultPlayer');
+      if (defaultPlayerSelect) {
+        defaultPlayerSelect.value = localStorage.getItem('default_player') || 'vidsrc';
+
+        // Save on change
+        defaultPlayerSelect.addEventListener('change', (e) => {
+          localStorage.setItem('default_player', e.target.value);
+        });
+      }
+
+      const showAdblockNoticeCheckbox = document.getElementById('showAdblockNotice');
+      if (showAdblockNoticeCheckbox) {
+        showAdblockNoticeCheckbox.checked = localStorage.getItem('showAdblockNotice') !== 'false';
+        
+        // Save on change
+        showAdblockNoticeCheckbox.addEventListener('change', (e) => {
+          localStorage.setItem('showAdblockNotice', e.target.checked);
+        });
+      }
+
+      // Danger zone: delete only user data (history, progress, tv state) but keep settings
+      document.getElementById('deleteUserData').addEventListener('click', () => {
+        if (!confirm('Delete watch history and viewing progress? Your settings will be kept.')) return;
+        try {
+          const keysToRemove = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (k === 'zanora_watched_history' || k.startsWith('progress_') || k.startsWith('tv_state_')) {
+              keysToRemove.push(k);
+            }
+          }
+          keysToRemove.forEach(k => {
+            localStorage.removeItem(k);
+            sessionStorage.removeItem(k);
+          });
+          sessionStorage.clear();
+          toast('User data deleted. Settings were kept.');
+        } catch (e) {
+          toast('Failed to delete user data');
+        }
+      });
+
+      // Danger zone: delete everything including settings
+      document.getElementById('deleteAllData').addEventListener('click', () => {
+        if (!confirm('Delete ALL data? This resets history, progress, and all settings. This cannot be undone.')) return;
+        try {
+          localStorage.clear();
+          sessionStorage.clear();
+          toast('All data deleted. Reloading...');
+          setTimeout(() => location.reload(), 800);
+        } catch (e) {
+          toast('Failed to delete data');
+        }
+      });
+    </script>
   </body>
 </html>

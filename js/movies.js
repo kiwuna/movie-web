@@ -9,7 +9,8 @@ async function loadHome(){
     const continueSection = document.querySelector('#continue-section');
     const continueRow = document.querySelector('#continue-watching');
     if(continueSection && continueRow){
-      const history = getHistory();
+      const showHistoryOnHome = localStorage.getItem('showHistoryOnHome') !== 'false';
+      const history = showHistoryOnHome ? getHistory() : [];
       if(history.length > 0){
         continueRow.innerHTML = history.slice(0,10).map(item => card(item, item.media_type === 'tv' ? 'tv' : 'movie')).join('');
       }else{
