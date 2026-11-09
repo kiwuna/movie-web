@@ -402,6 +402,11 @@ select {
   font-size: 13px;
   border-bottom: 1px solid var(--line);
   z-index: 1000;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.adblock-notice-banner.fade-out {
+  opacity: 0;
+  transform: translateY(-100%);
 }
 .filter-group {
   margin-bottom: 16px;
