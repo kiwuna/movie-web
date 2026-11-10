@@ -68,7 +68,8 @@ function saveDefaultPlayer(source) {
 
 function getDefaultPlayer() {
   try {
-    return localStorage.getItem('default_player') || 'vidsrc';
+    const saved = localStorage.getItem('default_player') || 'vidsrc';
+    return saved === 'zxcprime' ? 'viduki' : saved;
   } catch (e) {
     return 'vidsrc';
   }
@@ -194,11 +195,23 @@ function getVidRockUrl(mediaId, mediaType, season = 1, episode = 1) {
   return `https://vidrock.to/movie/${mediaId}`;
 }
 
-function getZxcPrimeUrl(mediaId, mediaType, season = 1, episode = 1) {
+let vidukiApiIndex = 1;
+function getVidukiUrl(mediaId, mediaType, season = 1, episode = 1, api = vidukiApiIndex) {
+  const base = `https://www.viduki.net/${api}/${mediaType === 'tv' ? 'tv' : 'movie'}/${mediaId}`;
+  return mediaType === 'tv' ? `${base}/${season}/${episode}` : base;
+}
+
+function getVidStuckUrl(mediaId, mediaType, season = 1, episode = 1) {
+  let saved;
   if (mediaType === 'tv') {
-    return `https://zxcstream.xyz/player/tv/${mediaId}/${season}/${episode}?dubLang=en`;
+    saved = getProgress(`progress_${mediaId}_s${season}_e${episode}`);
+  } else {
+    saved = getProgress(`progress_${mediaId}`);
   }
-  return `https://zxcstream.xyz/player/movie/${mediaId}?dubLang=en`;
+  const params = ['subtitle=english'];
+  if (saved && parseFloat(saved) > 10) params.push(`progress=${Math.floor(parseFloat(saved))}`);
+  const path = mediaType === 'tv' ? `tv/${mediaId}/${season}/${episode}` : `movie/${mediaId}`;
+  return `https://vidstuck.cc/embed/${path}?${params.join('&')}`;
 }
 
 function getVidNestUrl(mediaId, mediaType, season = 1, episode = 1) {
@@ -213,6 +226,7 @@ function updatePlayer(source, s = currentSeason, ep = currentEpisode) {
   currentSeason = s;
   currentEpisode = ep;
   playerLoadedAt = Date.now();
+  if (source === 'viduki') vidukiApiIndex = 1;
 
   if (currentMedia && type === 'tv') {
     saveTVState(currentMedia.id, s, ep);
@@ -239,7 +253,8 @@ function updatePlayer(source, s = currentSeason, ep = currentEpisode) {
   const sourceVidfastBtn = document.querySelector('#source-vidfast');
   const sourceVidupBtn = document.querySelector('#source-vidup');
   const sourceVidrockBtn = document.querySelector('#source-vidrock');
-  const sourceZxcprimeBtn = document.querySelector('#source-zxcprime');
+  const sourceVidukiBtn = document.querySelector('#source-viduki');
+  const sourceVidstuckBtn = document.querySelector('#source-vidstuck');
   const sourceVidnestBtn = document.querySelector('#source-vidnest');
   const sourceVidapiBtn = document.querySelector('#source-vidapi');
   const sourceTrailerBtn = document.querySelector('#source-trailer');
@@ -267,7 +282,8 @@ function updatePlayer(source, s = currentSeason, ep = currentEpisode) {
   if (sourceVidfastBtn) sourceVidfastBtn.classList.remove('active');
   if (sourceVidupBtn) sourceVidupBtn.classList.remove('active');
   if (sourceVidrockBtn) sourceVidrockBtn.classList.remove('active');
-  if (sourceZxcprimeBtn) sourceZxcprimeBtn.classList.remove('active');
+  if (sourceVidukiBtn) sourceVidukiBtn.classList.remove('active');
+  if (sourceVidstuckBtn) sourceVidstuckBtn.classList.remove('active');
   if (sourceVidnestBtn) sourceVidnestBtn.classList.remove('active');
   if (sourceVidapiBtn) sourceVidapiBtn.classList.remove('active');
   if (sourceTrailerBtn) sourceTrailerBtn.classList.remove('active');
@@ -288,14 +304,22 @@ function updatePlayer(source, s = currentSeason, ep = currentEpisode) {
         : `${titleOf(currentMedia)} (VidSrc Server)`;
     }
     if (sourceVidsrcBtn) sourceVidsrcBtn.classList.add('active');
-  } else if (source === 'zxcprime') {
-    if (playerIframe) playerIframe.src = getZxcPrimeUrl(currentMedia.id, type, s, ep);
+  } else if (source === 'viduki') {
+    if (playerIframe) playerIframe.src = getVidukiUrl(currentMedia.id, type, s, ep);
     if (playerTitle) {
       playerTitle.textContent = type === 'tv'
-        ? `${titleOf(currentMedia)} — Season ${s}, Episode ${ep} (ZxcPrime)`
-        : `${titleOf(currentMedia)} (ZxcPrime Server)`;
+        ? `${titleOf(currentMedia)} — Season ${s}, Episode ${ep} (Viduki)`
+        : `${titleOf(currentMedia)} (Viduki Server)`;
     }
-    if (sourceZxcprimeBtn) sourceZxcprimeBtn.classList.add('active');
+    if (sourceVidukiBtn) sourceVidukiBtn.classList.add('active');
+  } else if (source === 'vidstuck') {
+    if (playerIframe) playerIframe.src = getVidStuckUrl(currentMedia.id, type, s, ep);
+    if (playerTitle) {
+      playerTitle.textContent = type === 'tv'
+        ? `${titleOf(currentMedia)} — Season ${s}, Episode ${ep} (VidStuck)`
+        : `${titleOf(currentMedia)} (VidStuck Server)`;
+    }
+    if (sourceVidstuckBtn) sourceVidstuckBtn.classList.add('active');
   } else if (source === 'vidrock') {
     if (playerIframe) playerIframe.src = getVidRockUrl(currentMedia.id, type, s, ep);
     if (playerTitle) {
@@ -638,7 +662,8 @@ function syncActiveEpisode(s, ep) {
     const serverName = currentSource === 'vidup' ? 'VidUp'
       : currentSource === 'vidsrc' ? 'VidSrc'
       : currentSource === 'vidfast' ? 'VidFast'
-      : currentSource === 'zxcprime' ? 'ZxcPrime'
+      : currentSource === 'viduki' ? 'Viduki'
+      : currentSource === 'vidstuck' ? 'VidStuck'
       : currentSource === 'vidrock' ? 'VidRock'
       : currentSource === 'vidnest' ? 'VidNest'
       : currentSource === 'vidapi' ? 'VidApi'
@@ -738,6 +763,53 @@ window.addEventListener('message', (event) => {
   }
 });
 
+// Viduki player: auto-fallback across APIs + watch progress storage
+window.addEventListener('message', (event) => {
+  if (event.origin !== 'https://www.viduki.net') return;
+  let data = event.data;
+  if (typeof data === 'string') {
+    try { data = JSON.parse(data); } catch (e) { return; }
+  }
+  if (!data || typeof data !== 'object') return;
+
+  if (data.type === 'MEDIA_DATA' && data.data) {
+    try { localStorage.setItem('vidukinet-Progress', JSON.stringify(data.data)); } catch (e) {}
+    return;
+  }
+
+  if (data.type === 'viduki:all-servers-failed' && currentSource === 'viduki') {
+    if (vidukiApiIndex < 4) {
+      vidukiApiIndex += 1;
+      const iframe = document.querySelector('#media-player');
+      if (iframe && currentMedia) {
+        iframe.src = getVidukiUrl(currentMedia.id, type, currentSeason, currentEpisode);
+      }
+    } else {
+      toast('Viduki: no working server found for this title');
+    }
+  }
+});
+
+// VidStuck player: save playback progress from postMessage events
+window.addEventListener('message', (event) => {
+  if (event.origin !== 'https://vidstuck.cc') return;
+  if (typeof event.data !== 'string') return;
+  let data;
+  try { data = JSON.parse(event.data); } catch (e) { return; }
+  if (!data || typeof data.timestamp !== 'number' || data.timestamp <= 5) return;
+
+  const mediaId = data.id || (currentMedia && currentMedia.id);
+  if (!mediaId) return;
+  const isTv = data.type === 'tv' || data.type === 'anime' || type === 'tv';
+  const s = parseInt(data.season, 10) || currentSeason;
+  const ep = parseInt(data.episode, 10) || currentEpisode;
+  const key = isTv ? `progress_${mediaId}_s${s}_e${ep}` : `progress_${mediaId}`;
+  saveProgress(key, data.timestamp);
+  saveProgress(`progress_${mediaId}`, data.timestamp);
+  if (isTv) saveTVState(mediaId, s, ep);
+  lastKnownProgress = { key, value: data.timestamp };
+});
+
 async function loadDetails() {
   if (!id) {
     showError(root, 'Choose a movie or show from the catalog.');
@@ -813,7 +885,8 @@ async function loadDetails() {
                 <option value="vidsrc" ${currentSource === 'vidsrc' ? 'selected' : ''}>VidSrc</option>
                 <option value="vidrock" ${currentSource === 'vidrock' ? 'selected' : ''}>VidRock</option>
                 <option value="vidup" ${currentSource === 'vidup' ? 'selected' : ''}>VidUp</option>
-                <option value="zxcprime" ${currentSource === 'zxcprime' ? 'selected' : ''}>ZxcPrime</option>
+                <option value="viduki" ${currentSource === 'viduki' ? 'selected' : ''}>Viduki</option>
+                <option value="vidstuck" ${currentSource === 'vidstuck' ? 'selected' : ''}>VidStuck</option>
                 <option value="vidfast" ${currentSource === 'vidfast' ? 'selected' : ''}>VidFast</option>
                 <option value="vidnest" ${currentSource === 'vidnest' ? 'selected' : ''}>VidNest</option>
                 <option value="vidapi" ${currentSource === 'vidapi' ? 'selected' : ''}>VidApi</option>
@@ -840,8 +913,11 @@ async function loadDetails() {
               <button class="source-option ${currentSource === 'vidup' ? 'active' : ''}" id="source-vidup" type="button" onclick="updatePlayer('vidup'); scrollToPlayer();">
                 <span> VidUp</span>
               </button>
-              <button class="source-option ${currentSource === 'zxcprime' ? 'active' : ''}" id="source-zxcprime" type="button" onclick="updatePlayer('zxcprime'); scrollToPlayer();">
-                <span> ZxcPrime</span>
+              <button class="source-option ${currentSource === 'viduki' ? 'active' : ''}" id="source-viduki" type="button" onclick="updatePlayer('viduki'); scrollToPlayer();">
+                <span> Viduki</span>
+              </button>
+              <button class="source-option ${currentSource === 'vidstuck' ? 'active' : ''}" id="source-vidstuck" type="button" onclick="updatePlayer('vidstuck'); scrollToPlayer();">
+                <span> VidStuck</span>
               </button>
               <button class="source-option ${currentSource === 'vidfast' ? 'active' : ''}" id="source-vidfast" type="button" onclick="updatePlayer('vidfast'); scrollToPlayer();">
                 <span> VidFast</span>

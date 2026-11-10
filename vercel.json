@@ -8,6 +8,7 @@
     { "source": "/clips", "destination": "/clips.html" },
     { "source": "/details", "destination": "/details.html" },
     { "source": "/watch", "destination": "/watch.html" },
-    { "source": "/fhorts", "destination": "/fhorts.html" }
+    { "source": "/fhorts", "destination": "/fhorts.html" },
+    { "source": "/compact", "destination": "/compact.html" }
   ]
 }

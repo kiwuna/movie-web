@@ -23,17 +23,27 @@
       <div class="settings-section">
         <h2>Appearance</h2>
         <div class="setting-item">
-          <label>Accent Color (comming soon)</label>
-          <select class="filter-select">
+          <label>Accent Color</label>
+          <select class="filter-select" id="accentColor">
             <option value="#B9E8EA">Light Blue</option>
             <option value="#FF6B6B">Red</option>
-            <option value="#4ECDC4">Teal</option>
-            <option value="#FFE66D">Yellow</option>
-            <option value="#95E1D3">Mint</option>
-            <option value="#F38181">Coral</option>
-            <option value="#AA96DA">Purple</option>
+            <option value="#64748B">Slate</option>
+            <option value="#F1F5F9">White</option>
+            <option value="#FFBF00">Amber</option>
+            <option value="#D4AF78">Champagne</option>
+            <option value="#8B5CF6">Purple</option>
             <option value="#FCBAD3">Pink</option>
+            <option value="custom">Custom…</option>
           </select>
+          <input type="color" id="accentColorPicker" class="accent-color-picker" hidden />
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h2>Compact Mode</h2>
+        <div class="setting-item">
+          <label>Enable Compact Mode</label>
+          <input type="checkbox" id="compactMode" />
         </div>
       </div>
 
@@ -53,7 +63,8 @@
             <option value="vidsrc">VidSrc</option>
             <option value="vidrock">VidRock</option>
             <option value="vidup">VidUp</option>
-            <option value="zxcprime">ZxcPrime</option>
+            <option value="viduki">Viduki</option>
+            <option value="vidstuck">VidStuck</option>
             <option value="vidfast">VidFast</option>
             <option value="vidnest">VidNest</option>
             <option value="vidapi">VidApi</option>
@@ -66,6 +77,10 @@
         <div class="setting-item">
           <label>Disable Clips</label>
           <input type="checkbox" id="disableClips" />
+        </div>
+        <div class="setting-item">
+          <label>Disable Categories</label>
+          <input type="checkbox" id="disableCategories" />
         </div>
         <div class="setting-item">
           <label>Use Core Icon</label>
@@ -132,6 +147,18 @@
         });
       }
 
+      const disableCategoriesCheckbox = document.getElementById('disableCategories');
+      if (disableCategoriesCheckbox) {
+        disableCategoriesCheckbox.checked = localStorage.getItem('disableCategories') === 'true';
+
+        // Save on change
+        disableCategoriesCheckbox.addEventListener('change', (e) => {
+          localStorage.setItem('disableCategories', e.target.checked);
+          // Reload page to apply changes
+          setTimeout(() => location.reload(), 100);
+        });
+      }
+
       const showHistoryOnHomeCheckbox = document.getElementById('showHistoryOnHome');
       if (showHistoryOnHomeCheckbox) {
         showHistoryOnHomeCheckbox.checked = localStorage.getItem('showHistoryOnHome') !== 'false';
@@ -139,6 +166,58 @@
         // Save on change
         showHistoryOnHomeCheckbox.addEventListener('change', (e) => {
           localStorage.setItem('showHistoryOnHome', e.target.checked);
+        });
+      }
+
+      const compactModeCheckbox = document.getElementById('compactMode');
+      if (compactModeCheckbox) {
+        compactModeCheckbox.checked = localStorage.getItem('compactMode') === 'true';
+
+        // Save on change and redirect to the matching homepage
+        compactModeCheckbox.addEventListener('change', (e) => {
+          localStorage.setItem('compactMode', e.target.checked);
+          const isCompactPage = location.pathname.replace(/\.html$/, '') === '/compact';
+          if (e.target.checked) {
+            location.href = '/compact';
+          } else if (isCompactPage) {
+            location.href = '/home';
+          }
+        });
+      }
+
+      const accentColorSelect = document.getElementById('accentColor');
+      const accentColorPicker = document.getElementById('accentColorPicker');
+      if (accentColorSelect) {
+        const presetValues = [...accentColorSelect.options].map(o => o.value).filter(v => v !== 'custom');
+        const savedAccent = localStorage.getItem('accentColor') || '#B9E8EA';
+        const isCustom = !presetValues.includes(savedAccent);
+        accentColorSelect.value = isCustom ? 'custom' : savedAccent;
+
+        if (accentColorPicker) {
+          accentColorPicker.value = /^#[0-9a-fA-F]{6}$/.test(savedAccent) ? savedAccent : '#B9E8EA';
+          accentColorPicker.hidden = !isCustom;
+
+          // Dragging on the picker applies the color live
+          accentColorPicker.addEventListener('input', (e) => {
+            localStorage.setItem('accentColor', e.target.value);
+            document.documentElement.style.setProperty('--accent', e.target.value);
+          });
+        }
+
+        // Save on change and apply immediately
+        accentColorSelect.addEventListener('change', (e) => {
+          if (e.target.value === 'custom') {
+            if (accentColorPicker) {
+              accentColorPicker.hidden = false;
+              const c = accentColorPicker.value;
+              localStorage.setItem('accentColor', c);
+              document.documentElement.style.setProperty('--accent', c);
+            }
+            return;
+          }
+          if (accentColorPicker) accentColorPicker.hidden = true;
+          localStorage.setItem('accentColor', e.target.value);
+          document.documentElement.style.setProperty('--accent', e.target.value);
         });
       }
 

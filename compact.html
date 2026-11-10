@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Zanora — Compact</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="icon" href="./assets/Logos/Favico.png">
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <div class="adblock-notice-banner">For best experience, use an ad blocker like uBlock Origin</div>
+    <header class="site-header"></header>
+    <main class="compact-page">
+      <form class="search-large compact-search" id="search-form">
+        <div class="compact-search-field">
+          <input
+            id="search-input"
+            type="search"
+            placeholder="Search movies and TV shows"
+            autocomplete="off"
+            autofocus
+          /><button type="button" class="nav-search-clear compact-search-clear" id="search-clear" aria-label="Clear search" style="display: none;"><img src="assets/cross-circle.svg" alt="Clear" class="nav-search-clear-icon"></button>
+        </div><button class="button primary">Search</button>
+      </form>
+      <p class="result-count" id="search-summary">
+      </p>
+      <div class="catalog-grid" id="search-results"></div>
+      <div class="empty-state" id="no-results" hidden>
+        No results found. Try a different title or keyword.
+      </div>
+      <section class="content-section" id="continue-section">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Pick up where you left off</p>
+            <h2><img class="history-icon" src="assets/history.svg" alt="History"> Continue watching</h2>
+          </div>
+          <a href="/history">View all <img class="arrow-icon" src="assets/arrow-right.svg"></a>
+        </div>
+        <div class="card-row" id="continue-watching"></div>
+      </section>
+    </main>
+    <footer data-compact>
+      ZANORA <span>•</span>
+    </footer>
+    <div class="toast" id="toast"></div>
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/history.js"></script>
+    <script src="js/search.js"></script>
+    <script>
+      // Custom clear button (same as nav search bar)
+      const searchInput = document.getElementById('search-input');
+      const searchClear = document.getElementById('search-clear');
+      searchInput.addEventListener('input', () => {
+        searchClear.style.display = searchInput.value ? 'flex' : 'none';
+      });
+      searchClear.addEventListener('click', () => {
+        searchInput.value = '';
+        searchClear.style.display = 'none';
+        searchInput.dispatchEvent(new Event('input'));
+        searchInput.focus();
+      });
+
+      // Continue watching — same logic as the home page
+      const continueSection = document.querySelector('#continue-section');
+      const continueRow = document.querySelector('#continue-watching');
+      if (continueSection && continueRow) {
+        const showHistoryOnHome = localStorage.getItem('showHistoryOnHome') !== 'false';
+        const history = showHistoryOnHome ? getHistory() : [];
+        if (history.length > 0) {
+          continueRow.innerHTML = history.slice(0, 10).map(item => card(item, item.media_type === 'tv' ? 'tv' : 'movie')).join('');
+        } else {
+          continueSection.hidden = true;
+        }
+      }
+    </script>
+  </body>
+</html>
