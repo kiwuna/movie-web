@@ -5,6 +5,7 @@
     { "source": "/tv", "destination": "/tv.html" },
     { "source": "/search", "destination": "/search.html" },
     { "source": "/history", "destination": "/history.html" },
+    { "source": "/watchlist", "destination": "/watchlist.html" },
     { "source": "/clips", "destination": "/clips.html" },
     { "source": "/details", "destination": "/details.html" },
     { "source": "/watch", "destination": "/watch.html" },

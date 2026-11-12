@@ -630,7 +630,7 @@ select {
   transition: background .15s, color .15s;
 }
 .nav-cat-item:hover {
-  background: rgba(185,232,234,.1);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
   color: var(--accent);
 }
 
@@ -789,7 +789,7 @@ select {
   line-height: 1;
 }
 .hero-arrow:hover {
-  background: rgba(185, 232, 234, 0.2);
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
   border-color: var(--accent);
   color: var(--accent);
   transform: scale(1.08);
@@ -915,7 +915,7 @@ select {
   line-height: 1;
 }
 .row-scroll-btn:hover {
-  background: rgba(185, 232, 234, 0.18);
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
   border-color: var(--accent);
   color: var(--accent);
   transform: scale(1.08);
@@ -1281,7 +1281,7 @@ footer span:not(.adblock-notice) {
   background: var(--accent);
   color: #090b10;
   border-color: var(--accent);
-  box-shadow: 0 3px 14px rgba(185,232,234,.35);
+  box-shadow: 0 3px 14px color-mix(in srgb, var(--accent) 35%, transparent);
   cursor: default;
 }
 .pg-btn:disabled {
@@ -1461,7 +1461,7 @@ footer span:not(.adblock-notice) {
   overflow-y: hidden;
   padding-bottom: 6px;
   scrollbar-width: thin;
-  scrollbar-color: rgba(185, 232, 234, 0.3) transparent;
+  scrollbar-color: color-mix(in srgb, var(--accent) 30%, transparent) transparent;
   -webkit-overflow-scrolling: touch;
 }
 .cast-list::-webkit-scrollbar {
@@ -1472,7 +1472,7 @@ footer span:not(.adblock-notice) {
   border-radius: 4px;
 }
 .cast-list::-webkit-scrollbar-thumb {
-  background: rgba(185, 232, 234, 0.3);
+  background: color-mix(in srgb, var(--accent) 30%, transparent);
   border-radius: 4px;
 }
 .cast-list::-webkit-scrollbar-thumb:hover {
@@ -1730,7 +1730,7 @@ footer span:not(.adblock-notice) {
   }
   .nav-cat-item:hover,
   .nav-cat-item:active {
-    background: rgba(185, 232, 234, 0.12);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
     color: var(--accent);
   }
   .hero {
@@ -1942,3 +1942,27 @@ footer span:not(.adblock-notice) {
   background: var(--accent);
   filter: brightness(1.12);
 }
+
+/* Accent-colored Zanora wordmark (header text + footer) */
+.brand-accent { font-weight: inherit; }
+html.accent-brand .brand-accent { color: var(--accent); }
+
+/* Accent-colored nav bar items */
+html.accent-nav .nav-links a,
+html.accent-nav .nav-search,
+html.accent-nav .nav-settings,
+html.accent-nav .nav-cat-btn {
+  color: var(--accent);
+}
+html.accent-nav .nav-links a:hover,
+html.accent-nav .nav-search:hover,
+html.accent-nav .nav-settings:hover,
+html.accent-nav .nav-cat-btn:hover {
+  color: var(--accent);
+  filter: brightness(1.15);
+}
+
+/* Watchlist save button on details page */
+.watchlist-btn svg{stroke:currentColor;transition:transform .2s ease}
+.watchlist-btn:hover svg{transform:translateY(1px)}
+.watchlist-btn.active{border-color:var(--accent);color:var(--accent)}

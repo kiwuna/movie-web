@@ -86,6 +86,14 @@
           <label>Use Core Icon</label>
           <input type="checkbox" id="useCoreIcon" />
         </div>
+        <div class="setting-item">
+          <label>Use Accent Color on Zanora Text</label>
+          <input type="checkbox" id="accentBrand" />
+        </div>
+        <div class="setting-item">
+          <label>Use Accent Color on Nav Bar Buttons</label>
+          <input type="checkbox" id="accentNav" />
+        </div>
       </div>
 
 
@@ -142,6 +150,30 @@
         // Save on change
         disableClipsCheckbox.addEventListener('change', (e) => {
           localStorage.setItem('disableClips', e.target.checked);
+          // Reload page to apply changes
+          setTimeout(() => location.reload(), 100);
+        });
+      }
+
+      const accentBrandCheckbox = document.getElementById('accentBrand');
+      if (accentBrandCheckbox) {
+        accentBrandCheckbox.checked = localStorage.getItem('accentBrand') === 'true';
+
+        // Save on change
+        accentBrandCheckbox.addEventListener('change', (e) => {
+          localStorage.setItem('accentBrand', e.target.checked);
+          // Reload page to apply changes
+          setTimeout(() => location.reload(), 100);
+        });
+      }
+
+      const accentNavCheckbox = document.getElementById('accentNav');
+      if (accentNavCheckbox) {
+        accentNavCheckbox.checked = localStorage.getItem('accentNav') === 'true';
+
+        // Save on change
+        accentNavCheckbox.addEventListener('change', (e) => {
+          localStorage.setItem('accentNav', e.target.checked);
           // Reload page to apply changes
           setTimeout(() => location.reload(), 100);
         });
@@ -248,7 +280,7 @@
           const keysToRemove = [];
           for (let i = 0; i < localStorage.length; i++) {
             const k = localStorage.key(i);
-            if (k === 'zanora_watched_history' || k.startsWith('progress_') || k.startsWith('tv_state_')) {
+            if (k === 'zanora_watched_history' || k === 'zanora_watchlist' || k.startsWith('progress_') || k.startsWith('tv_state_')) {
               keysToRemove.push(k);
             }
           }

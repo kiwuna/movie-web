@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Watchlist — Zanora</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="icon" href="./assets/Logos/Favico.png">
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/thinking.css" />
+  </head>
+  <body>
+    <header class="site-header"></header>
+    <main class="catalog-page">
+      <div class="page-header">
+        <div>
+          <p class="eyebrow">Your watchlist</p>
+          <h1>Saved for later.</h1>
+          <p class="intro">Titles you want to watch, saved locally.</p>
+        </div>
+        <button class="text-button" id="clear-watchlist">Clear watchlist</button>
+      </div>
+      <p class="result-count" id="result-count"></p>
+      <div class="catalog-grid" id="watchlist-grid"></div>
+      <div class="empty-state" id="empty-state" hidden>
+        Your watchlist is empty.<br /><button class="text-button" id="browse-movies">
+          Browse movies
+        </button>
+      </div>
+    </main>
+    <footer>
+      ZANORA <span>•</span> This product uses the TMDB API but is not
+      endorsed or certified by TMDB.
+    </footer>
+    <div class="toast" id="toast"></div>
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/watchlist.js"></script>
+  </body>
+</html>

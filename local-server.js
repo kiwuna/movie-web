@@ -38,6 +38,7 @@ const server = http.createServer(async (request, response) => {
     '/tv': 'tv.html',
     '/search': 'search.html',
     '/history': 'history.html',
+    '/watchlist': 'watchlist.html',
     '/clips': 'clips.html',
     '/details': 'details.html',
     '/watch': 'watch.html',

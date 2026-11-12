@@ -6,14 +6,14 @@
 .player-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px}
 .player-title{font-size:14px;color:var(--text);font-weight:600}
 .player-controls-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.player-status-badge{font-size:11px;padding:3px 8px;border-radius:20px;background:rgba(185,232,234,.15);color:var(--accent);text-transform:uppercase;letter-spacing:.08em}
+.player-status-badge{font-size:11px;padding:3px 8px;border-radius:20px;background:color-mix(in srgb, var(--accent) 15%, transparent);color:var(--accent);text-transform:uppercase;letter-spacing:.08em}
 .player-close-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:var(--muted);font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;cursor:pointer;transition:.2s}
 .player-close-btn:hover{background:rgba(255,255,255,.16);color:var(--text)}
 
 .default-player-selector{display:flex;align-items:center;gap:8px;margin-right:12px}
 .default-player-selector .fact-label{margin:0;font-size:11px;color:var(--muted);white-space:nowrap}
 .default-player-select{background:var(--panel-2);color:var(--text);border:1px solid var(--line);padding:4px 8px;border-radius:6px;font-size:12px;outline:none;cursor:pointer;transition:border-color .2s}
-.default-player-select:hover{border-color:rgba(185,232,234,.4)}
+.default-player-select:hover{border-color:color-mix(in srgb, var(--accent) 40%, transparent)}
 .default-player-select:focus{border-color:var(--accent)}
 
 .source-panel{width:200px;flex-shrink:0;padding:15px;border:1px solid var(--line);border-radius:10px;background:var(--panel);align-self:stretch}
@@ -21,16 +21,16 @@
 .source-options{display:flex;flex-direction:column;gap:8px;margin-top:8px}
 .source-option{width:100%;padding:11px 14px;text-align:left;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.03);color:var(--muted);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:.2s}
 .source-option:hover{background:rgba(255,255,255,.07);color:var(--text)}
-.source-option.active{border-color:rgba(185,232,234,.4);background:rgba(185,232,234,.08);color:var(--text);font-weight:600}
+.source-option.active{border-color:color-mix(in srgb, var(--accent) 40%, transparent);background:color-mix(in srgb, var(--accent) 8%, transparent);color:var(--text);font-weight:600}
 .source-option.active::after{content:'•';color:var(--accent);font-size:16px}
 .source-option.pip-option{gap:8px;justify-content:flex-start}
 .source-option.pip-option svg,.source-option.pip-option .pip-icon{flex-shrink:0;width:20px;height:20px}
 .source-option.pip-option span{flex:1}
-.source-option.pip-option.active{border-color:rgba(185,232,234,.4);background:rgba(185,232,234,.08);color:var(--text);font-weight:600}
+.source-option.pip-option.active{border-color:color-mix(in srgb, var(--accent) 40%, transparent);background:color-mix(in srgb, var(--accent) 8%, transparent);color:var(--text);font-weight:600}
 .source-option.next-ep-option{gap:8px;justify-content:flex-start;margin-top:8px}
 .source-option.next-ep-option svg{flex-shrink:0;width:20px;height:20px}
 .source-option.next-ep-option span{flex:1}
-.source-option.next-ep-option:hover{background:rgba(185,232,234,.15);border-color:rgba(185,232,234,.5);color:var(--accent)}
+.source-option.next-ep-option:hover{background:color-mix(in srgb, var(--accent) 15%, transparent);border-color:color-mix(in srgb, var(--accent) 50%, transparent);color:var(--accent)}
 .source-panel p{margin:12px 0 0;color:var(--muted);font-size:12px;line-height:1.55}
 
 /* Seasons & Episode Sidebar on left side of Player */
@@ -39,7 +39,7 @@
 .seasons-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px}
 .seasons-heading-left{display:flex;align-items:center;gap:8px}
 .seasons-heading-left .fact-label{margin-bottom:0}
-.ep-count-pill{font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px;background:rgba(185,232,234,.12);color:var(--accent);letter-spacing:.05em;border:1px solid rgba(185,232,234,.25)}
+.ep-count-pill{font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px;background:color-mix(in srgb, var(--accent) 12%, transparent);color:var(--accent);letter-spacing:.05em;border:1px solid color-mix(in srgb, var(--accent) 25%, transparent)}
 .seasons-controls{display:flex;align-items:center;gap:6px;width:100%;margin-top:6px}
 .episodes-search-input{background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:6px 10px;color:var(--text);font-size:12px;flex:1;min-width:0;outline:none;transition:border-color .2s}
 .episodes-search-input:focus{border-color:var(--accent)}
@@ -50,18 +50,18 @@
 
 
 /* Scrollable Episode Container: Fit inside player sidebar */
-.episodes-scroll-wrapper{flex:1;min-height:220px;max-height:450px;overflow-y:auto;padding-right:4px;scrollbar-width:thin;scrollbar-color:rgba(185,232,234,.4) rgba(255,255,255,.04)}
+.episodes-scroll-wrapper{flex:1;min-height:220px;max-height:450px;overflow-y:auto;padding-right:4px;scrollbar-width:thin;scrollbar-color:color-mix(in srgb, var(--accent) 40%, transparent) rgba(255,255,255,.04)}
 .episodes-scroll-wrapper::-webkit-scrollbar{width:5px}
 .episodes-scroll-wrapper::-webkit-scrollbar-track{background:rgba(255,255,255,.04);border-radius:8px}
-.episodes-scroll-wrapper::-webkit-scrollbar-thumb{background:rgba(185,232,234,.4);border-radius:8px}
+.episodes-scroll-wrapper::-webkit-scrollbar-thumb{background:color-mix(in srgb, var(--accent) 40%, transparent);border-radius:8px}
 .episodes-scroll-wrapper::-webkit-scrollbar-thumb:hover{background:var(--accent)}
 
 .episodes-container{display:flex;flex-direction:column;gap:6px}
 .episodes-loader{padding:18px 0;text-align:center}
 
 .episode-card{display:flex;align-items:center;gap:10px;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:9px 12px;cursor:pointer;transition:background .2s,border-color .2s,transform .15s}
-.episode-card:hover{background:#151515;border-color:rgba(185,232,234,.4);transform:translateY(-1px)}
-.episode-card.active{background:rgba(185,232,234,.08);border-color:var(--accent)}
+.episode-card:hover{background:#151515;border-color:color-mix(in srgb, var(--accent) 40%, transparent);transform:translateY(-1px)}
+.episode-card.active{background:color-mix(in srgb, var(--accent) 8%, transparent);border-color:var(--accent)}
 
 
 .ep-info{flex:1;min-width:0}
@@ -109,9 +109,9 @@
 .button.download-btn svg{stroke:currentColor;transition:transform .2s ease}
 .button.download-btn:hover svg{transform:translateY(1px)}
 
-.player-download-btn{background:rgba(185,232,234,.12);border:1px solid rgba(185,232,234,.3);color:var(--accent);font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:all .2s ease}
+.player-download-btn{background:color-mix(in srgb, var(--accent) 12%, transparent);border:1px solid color-mix(in srgb, var(--accent) 30%, transparent);color:var(--accent);font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:all .2s ease}
 .player-download-btn:hover{background:var(--accent);color:#000000;border-color:var(--accent)}
 .player-download-btn svg{stroke:currentColor}
 
-.download-source-option{border-color:rgba(185,232,234,.3);color:var(--accent);margin-top:4px}
-.download-source-option:hover{background:rgba(185,232,234,.15);color:#ffffff;border-color:var(--accent)}
+.download-source-option{border-color:color-mix(in srgb, var(--accent) 30%, transparent);color:var(--accent);margin-top:4px}
+.download-source-option:hover{background:color-mix(in srgb, var(--accent) 15%, transparent);color:#ffffff;border-color:var(--accent)}
