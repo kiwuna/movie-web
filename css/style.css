@@ -111,6 +111,41 @@ select {
 .nav-link-mobile {
   display: none;
 }
+.nav-links a {
+  position: relative;
+}
+.nav-watchlist-badge {
+  position: absolute;
+  top: -8px;
+  right: -14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #0b0b0b;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 0 0 2px var(--ink);
+}
+.nav-watchlist-badge[hidden] {
+  display: none;
+}
+@media (max-width: 768px) {
+  .nav-watchlist-badge {
+    min-width: 8px;
+    width: 8px;
+    height: 8px;
+    padding: 0;
+    right: -10px;
+    top: -6px;
+    font-size: 0;
+  }
+}
 
 /* ── Navigation Search Bar ── */
 .nav-search-wrapper {

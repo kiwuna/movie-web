@@ -15,6 +15,7 @@ function saveWatchlist(list) {
   } catch (e) {
     console.error('Failed to save watchlist:', e);
   }
+  if (typeof updateWatchlistNavBadge === 'function') updateWatchlistNavBadge();
 }
 
 function isInWatchlist(id, mediaType) {
