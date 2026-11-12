@@ -1966,3 +1966,8 @@ html.accent-nav .nav-cat-btn:hover {
 .watchlist-btn svg{stroke:currentColor;transition:transform .2s ease}
 .watchlist-btn:hover svg{transform:translateY(1px)}
 .watchlist-btn.active{border-color:var(--accent);color:var(--accent)}
+
+/* Offline / no internet state */
+.offline-state{display:flex;flex-direction:column;align-items:center;gap:14px;padding:40px 20px}
+.offline-gif{width:min(320px,70vw);height:auto;border-radius:12px}
+.offline-label{margin:0;font-size:15px;color:var(--muted);letter-spacing:.02em}
