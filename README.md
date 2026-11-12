@@ -1,29 +1,54 @@
-# Reelhouse + TMDB
+# Zanora
 
-This plain HTML, CSS, and JavaScript catalog uses one small Vercel function at `api/tmdb.js` so the TMDB credential stays server-side.
+Zanora is a movie and TV discovery website built with plain HTML, CSS, and JavaScript. It uses The Movie Database (TMDB) API for movie and television metadata, search, artwork, and related information.
 
-## Configure TMDB safely
+The project uses a lightweight Vercel serverless function at `api/tmdb.js` to keep the TMDB API credential server-side.
 
-1. Create a TMDB API **Read Access Token** (bearer token).
-2. In Vercel: project **Settings** → **Environment Variables**, add `TMDB_READ_ACCESS_TOKEN` with that token for the environments you deploy.
-3. Redeploy. The browser calls `/api/tmdb`; only the serverless function forwards the secret token to TMDB.
+## TMDB Configuration
 
-## Run locally with the API — no Vercel needed
+1. Create a TMDB API **Read Access Token** (Bearer token).
+2. Open your Vercel project → **Settings** → **Environment Variables**.
+3. Add an environment variable named `TMDB_READ_ACCESS_TOKEN` and paste your token as its value.
+4. Redeploy your project.
 
-Opening `index.html` directly as a `file://` page cannot run `/api/tmdb`. This project includes `local-server.js`, a tiny local-only server that serves the site and secure TMDB proxy together:
+The browser sends requests to `/api/tmdb`, and the serverless function forwards them to TMDB using the private token.
+
+## Run Locally
+
+Opening `index.html` directly using `file://` will not work with the `/api/tmdb` endpoint.
+
+To run the website locally with working TMDB requests, use the included `local-server.js`:
 
 ```powershell
-# Create .env.local from .env.example and add your real token locally
+# Create .env.local from the example file
 Copy-Item .env.example .env.local
 
-# Start the static site and the /api/tmdb function together
+# Add your TMDB Read Access Token to .env.local
+
+# Start the local server
 node local-server.js
 ```
 
-Then open `http://localhost:3000`. The website and API are served from the same origin, so real TMDB requests work locally without exposing the token in browser code. Never commit `.env.local`.
+Open the website at:
 
-## Deploy
+`http://localhost:3000`
 
-Import this folder into Vercel (or run `vercel`), add the environment variable above, then deploy. Static pages are served normally and Vercel automatically serves `api/tmdb.js` at `/api/tmdb`.
+The local server serves the website and TMDB proxy from the same origin, allowing TMDB requests to work without exposing the API token in browser code.
 
-TMDB attribution: This product uses the TMDB API but is not endorsed or certified by TMDB.
+**Never commit `.env.local` or publish your API token.**
+
+## Deployment
+
+1. Import the project repository into Vercel.
+2. Add `TMDB_READ_ACCESS_TOKEN` under **Settings → Environment Variables**.
+3. Deploy the project.
+
+Vercel serves the static website and automatically handles the serverless function at `/api/tmdb`.
+
+## Copyright and Attribution
+
+Zanora is an independent project and is not affiliated with or endorsed by TMDB.
+
+This product uses the TMDB API but is not endorsed or certified by TMDB.
+
+Movie and television metadata and artwork are provided by TMDB and remain subject to their respective rights and terms.
