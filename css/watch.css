@@ -96,7 +96,7 @@
 @media (max-width: 480px) {
   .episode-card{padding:9px;gap:10px}
   .ep-info{flex:1;min-width:0}
-  .ep-name{font-size:12px;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .ep-name{font-size:12px;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical}
   .ep-meta{font-size:11px}
   .ep-play-btn{padding:6px 9px;font-size:11px}
   .episodes-scroll-wrapper{max-height:380px}
@@ -115,3 +115,34 @@
 
 .download-source-option{border-color:color-mix(in srgb, var(--accent) 30%, transparent);color:var(--accent);margin-top:4px}
 .download-source-option:hover{background:color-mix(in srgb, var(--accent) 15%, transparent);color:#ffffff;border-color:var(--accent)}
+
+@media (max-width: 768px) {
+  .watch-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .watch-actions .button {
+    flex: 1 1 calc(50% - 5px);
+    min-width: 0;
+    justify-content: center;
+    padding: 12px 10px;
+    font-size: 14px;
+  }
+
+  .watch-actions .button.primary {
+    flex-basis: 100%;
+  }
+
+  .watch-actions .button:nth-child(4):last-child {
+    flex-basis: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .watch-actions .button {
+    padding: 11px 8px;
+    font-size: 13px;
+  }
+}

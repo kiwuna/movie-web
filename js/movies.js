@@ -32,8 +32,8 @@ async function loadHome(){
                 </div>
                 <p class="hero-description">${(item.overview||'Discover what everyone is talking about.').slice(0,150)}${(item.overview?.length>150)?'...':''}</p>
                 <div class="hero-actions">
-                  <a class="button primary" href="/details?id=${item.id}&type=movie#preview">
-                    <img src="assets/Logos/play-button.png" alt="Play" class="btn-play-icon"> Watch preview
+                  <a class="button primary" href="/details?id=${item.id}&type=movie#watch">
+                    <img src="assets/Logos/play-button.png" alt="Play" class="btn-play-icon"> Watch
                   </a>
                   <a class="button secondary" href="/details?id=${item.id}&type=movie">More info</a>
                 </div>

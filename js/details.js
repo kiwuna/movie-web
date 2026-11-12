@@ -982,7 +982,7 @@ async function loadDetails() {
             const savedToWatchlist = typeof isInWatchlist === 'function' && isInWatchlist(item.id, type);
             const watchlistBtn = `
               <button class="button secondary watchlist-btn${savedToWatchlist ? ' active' : ''}" id="watchlist-btn" onclick="toggleWatchlistSave()" title="${savedToWatchlist ? 'Remove from watchlist' : 'Add to watchlist'}">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.3 7 12 12 20.7 7"/><line x1="12" y1="22" x2="12" y2="12"/></svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
                 <span>${savedToWatchlist ? 'Saved' : 'Save'}</span>
               </button>
             `;
@@ -1067,6 +1067,12 @@ async function loadDetails() {
           scrollToPlayer();
         }, 100);
       }
+    }
+    if (location.hash === '#watch') {
+      setTimeout(() => {
+        updatePlayer(currentSource);
+        scrollToPlayer();
+      }, 300);
     }
     if (location.hash === '#preview') {
       setTimeout(() => {
