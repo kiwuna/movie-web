@@ -44,7 +44,11 @@ const server = http.createServer(async (request, response) => {
     '/watch': 'watch.html',
     '/fhorts': 'fhorts.html',
     '/settings': 'settings.html',
-    '/compact': 'compact.html'
+    '/compact': 'compact.html',
+    '/legal/about': 'legal/about.html',
+    '/legal/privacy': 'legal/privacy.html',
+    '/legal/terms': 'legal/terms.html',
+    '/legal/copyright': 'legal/copyright.html'
   };
 
   let requested = url.pathname;

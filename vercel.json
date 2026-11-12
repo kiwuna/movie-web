@@ -10,6 +10,10 @@
     { "source": "/details", "destination": "/details.html" },
     { "source": "/watch", "destination": "/watch.html" },
     { "source": "/fhorts", "destination": "/fhorts.html" },
-    { "source": "/compact", "destination": "/compact.html" }
+    { "source": "/compact", "destination": "/compact.html" },
+    { "source": "/legal/about", "destination": "/legal/about.html" },
+    { "source": "/legal/privacy", "destination": "/legal/privacy.html" },
+    { "source": "/legal/terms", "destination": "/legal/terms.html" },
+    { "source": "/legal/copyright", "destination": "/legal/copyright.html" }
   ]
 }

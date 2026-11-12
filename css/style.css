@@ -1051,11 +1051,35 @@ select {
   background: #0f0f0f;
 }
 footer {
-  padding: 45px 5vw;
+  padding: 34px 5vw 42px;
+  border-top: 1px solid var(--line);
   color: #676b75;
   font-size: 11px;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.1em;
   text-align: center;
+}
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 20px;
+  margin-bottom: 16px;
+}
+.footer-links a {
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  transition: color 0.2s ease;
+}
+.footer-links a:hover {
+  color: var(--text);
+}
+.footer-copy,
+.footer-attribution {
+  margin: 5px 0;
+}
+.footer-attribution {
+  color: var(--muted);
 }
 footer span:not(.adblock-notice) {
   color: var(--accent);
