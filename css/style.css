@@ -2020,6 +2020,9 @@ html.accent-nav .nav-cat-btn:hover {
   color: var(--accent);
   filter: brightness(1.15);
 }
+html.accent-nav .menu-button span {
+  background: var(--accent);
+}
 
 /* Watchlist save button on details page */
 .watchlist-btn svg{stroke:currentColor;transition:transform .2s ease}
